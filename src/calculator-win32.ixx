@@ -49,6 +49,7 @@ export namespace Win32
 		::HGDIOBJ,
 		::HBRUSH,
 		::MSG,
+		::DestroyWindow,
 		::PostQuitMessage,
 		::PeekMessageW,
 		::TranslateMessage,

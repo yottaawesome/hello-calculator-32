@@ -128,6 +128,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="calculator-error.ixx" />
+    <ClCompile Include="calculator-log.ixx" />
     <ClCompile Include="calculator-raii.ixx" />
     <ClCompile Include="calculator-ui.ixx" />
     <ClCompile Include="calculator.ixx" />

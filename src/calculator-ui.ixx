@@ -19,7 +19,7 @@ export namespace UI
 	};
 
 	//
-	// Strongly typed message handler.
+	// Strongly-typed message.
 	template<Win32::DWORD VMsg>
 	struct Win32Message
 	{
@@ -39,6 +39,18 @@ export namespace UI
 
 	struct Window
 	{
+		~Window()
+		{
+			Destroy();
+		}
+
+		void Destroy(this auto&& self) noexcept
+		{
+			if (self.m_hwnd)
+				Win32::DestroyWindow(self.m_hwnd);
+			self.m_hwnd = nullptr;
+		}
+
 		//
 		// Registers the window class.
 		auto Register(this auto&& self) -> decltype(self)
@@ -106,10 +118,17 @@ export namespace UI
 
 		//
 		// Shows or hide the window, if present.
-		auto ShowOrHide(this auto&& self, bool show) noexcept -> decltype(self)
+		auto Show(this auto&& self) noexcept -> decltype(self)
 		{
 			if (self.m_hwnd)
-				Win32::ShowWindow(self.m_hwnd, show ? Win32::ShowWindowOptions::ShowNormal : Win32::ShowWindowOptions::Hide);
+				Win32::ShowWindow(self.m_hwnd, Win32::ShowWindowOptions::ShowNormal);
+			return self;
+		}
+
+		auto Hide(this auto&& self) noexcept -> decltype(self)
+		{
+			if (self.m_hwnd)
+				Win32::ShowWindow(self.m_hwnd, Win32::ShowWindowOptions::Hide);
 			return self;
 		}
 

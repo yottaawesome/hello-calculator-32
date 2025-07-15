@@ -3,6 +3,7 @@ export import :win32;
 export import :error;
 export import :raii;
 export import :ui;
+export import :log;
 
 import std;
 
@@ -15,10 +16,7 @@ export extern "C" auto wWinMain(
 {
 	// register class
 	UI::MainWindow app;
-	app.Register()
-		.Create()
-		.ShowOrHide(true)
-		.MainLoop();
+	app.Register().Create().Show().MainLoop();
 
 	// create window
 
