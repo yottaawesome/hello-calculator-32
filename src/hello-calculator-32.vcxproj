@@ -127,8 +127,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="win32.ixx" />
+    <ClCompile Include="calculator-error.ixx" />
+    <ClCompile Include="calculator-raii.ixx" />
+    <ClCompile Include="calculator-ui.ixx" />
+    <ClCompile Include="calculator.ixx" />
+    <ClCompile Include="calculator-win32.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
