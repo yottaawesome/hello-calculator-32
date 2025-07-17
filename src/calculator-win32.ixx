@@ -2,8 +2,8 @@ module;
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <wingdi.h>
 #include <CommCtrl.h>
+#include <wingdi.h>
 
 export module calculator:win32;
 import std;
@@ -25,7 +25,7 @@ export namespace Win32
 			return VValue();
 		}
 	};
-
+	
 	using
 		::BOOL,
 		::HMENU,
@@ -49,6 +49,13 @@ export namespace Win32
 		::HGDIOBJ,
 		::HBRUSH,
 		::MSG,
+		::UINT32,
+		::UINT_PTR,
+		::DWORD_PTR,
+		::MessageBoxA,
+		::MessageBoxW,
+		::DefSubclassProc,
+		::SetWindowSubclass,
 		::DestroyWindow,
 		::PostQuitMessage,
 		::PeekMessageW,
@@ -82,11 +89,42 @@ export namespace Win32
 		::LocalFree,
 		::DefWindowProcW,
 		::CreateWindowExW,
-		::ShowWindow
+		::ShowWindow,
+		::InitCommonControls,
+		::AllocConsole,
+		::WriteConsoleA,
+		::WriteConsoleW,
+		::FreeConsole,
+		::INITCOMMONCONTROLSEX,
+		::InitCommonControlsEx,
+		::SetWindowRgn,
+		::CreateRectRgn,
+		::CreateRoundRectRgn
 		;
 
 	constexpr auto Gwlp_UserData = GWLP_USERDATA;
 	constexpr auto CwUseDefault = CW_USEDEFAULT;
+
+	namespace InitCommonControlsFlag
+	{
+		enum
+		{
+			Animate = ICC_ANIMATE_CLASS,
+			NativeClass = ICC_NATIVEFNTCTL_CLASS,
+			Standard = ICC_STANDARD_CLASSES,
+			Cool = ICC_COOL_CLASSES,
+			Bar = ICC_BAR_CLASSES
+		};
+	}
+
+
+	namespace MessageBoxStyle
+	{
+		enum
+		{
+			OK = MB_OK
+		};
+	}
 
 	namespace ShowWindowOptions
 	{
@@ -168,6 +206,21 @@ export namespace Win32
 		{
 			WsOverlappedWindow = WS_OVERLAPPEDWINDOW
 		};
+	}
+
+	namespace Styles
+	{
+		constexpr auto Child = WS_CHILD;
+		constexpr auto ClipSiblings = WS_CLIPSIBLINGS;
+		constexpr auto Visible = WS_VISIBLE;
+		constexpr auto OverlappedWindow = WS_OVERLAPPEDWINDOW;
+		constexpr auto HScroll = WS_HSCROLL;
+		constexpr auto VScroll = WS_VSCROLL;
+		constexpr auto PushButton = BS_DEFPUSHBUTTON;
+		constexpr auto VRedraw = CS_VREDRAW;
+		constexpr auto HRedraw = CS_HREDRAW;
+		constexpr auto AutoCheckBox = BS_AUTOCHECKBOX;
+		constexpr auto PushLike = BS_PUSHLIKE;
 	}
 
 	constexpr Win32Constant<IDI_APPLICATION> IdiApplication;

@@ -2,10 +2,112 @@ export module calculator:ui;
 import std;
 import :win32;
 import :error;
+import :raii;
 
+// Controls
 export namespace UI
 {
-	struct CreateArgs
+	struct CreateControlArgs
+	{
+		Win32::DWORD Id;
+		std::wstring_view Class;
+		std::optional<std::wstring_view> Text;
+		Win32::DWORD Styles = 0;
+		int X = 0;
+		int Y = 0;
+		int Width = 0;
+		int Height = 0;
+	};
+
+	struct Control
+	{
+		auto Create(this auto&& self, Win32::HWND parent) -> void
+		{
+			CreateControlArgs args = self.GetCreateArgs();
+
+			HWND window = Win32::CreateWindowExW(
+				0,
+				args.Class.data(),
+				args.Text ? args.Text->data() : nullptr,
+				args.Styles,
+				args.X,
+				args.Y,
+				args.Width,
+				args.Height,
+				parent,
+				(Win32::HMENU)(Win32::UINT_PTR)(args.Id),
+				Win32::GetModuleHandleW(nullptr),
+				nullptr
+			);
+			if (self.m_window = Raii::HwndUniquePtr(window); not self.m_window)
+				throw Error::Win32Error(Win32::GetLastError(), "Failed creating button.");
+			if (not Win32::SetWindowSubclass(self.m_window.get(), SubclassProc<std::remove_cvref_t<decltype(self)>>, 5, reinterpret_cast<Win32::DWORD_PTR>(&self)))
+			{
+				throw Error::Win32Error(Win32::GetLastError(), "Failed creating button.");
+			}
+
+			self.Init();
+		}
+
+		auto HandleMessage(
+			this auto&& self,
+			Win32::UINT msg,
+			Win32::WPARAM wParam,
+			Win32::LPARAM lParam,
+			Win32::UINT_PTR uIdSubclass,
+			Win32::DWORD_PTR dwRefData
+		) -> Win32::LRESULT
+		{
+			return Win32::DefSubclassProc(self.m_window.get(), msg, wParam, lParam);
+		}
+
+
+		template<typename TControl>
+		static auto SubclassProc(
+			Win32::HWND hwnd,
+			Win32::UINT msg,
+			Win32::WPARAM wParam,
+			Win32::LPARAM lParam,
+			Win32::UINT_PTR idSubclass,
+			Win32::DWORD_PTR refData
+		) -> Win32::LRESULT
+		{
+			TControl* pThis = reinterpret_cast<TControl*>(refData);
+			return pThis
+				? pThis->HandleMessage(msg, wParam, lParam, idSubclass, refData)
+				: Win32::DefSubclassProc(hwnd, msg, wParam, lParam);
+		}
+
+		Raii::HwndUniquePtr m_window = nullptr;
+	};
+
+	struct Button : Control
+	{
+		auto GetCreateArgs(this auto&& self) -> CreateControlArgs
+		{
+			return {
+				.Id = 100,
+				.Class = L"Button",
+				.Text = L"Hello",
+				.Styles = Win32::Styles::PushButton | Win32::Styles::Child | Win32::Styles::Visible,
+				.X = 10,
+				.Y = 10,
+				.Width = 100,
+				.Height = 50
+			};
+		}
+
+		void Init(this auto&& self)
+		{
+			//Win32::SetWindowRgn(self.m_window.get(), Win32::CreateRoundRectRgn(10, 10, 60, 110, 50, 50), true);
+		}
+	};
+}
+
+// Windows
+export namespace UI
+{
+	struct CreateWindowArgs
 	{
 		Win32::PCWSTR WindowName = nullptr;
 		Win32::DWORD Style = 0;
@@ -66,7 +168,7 @@ export namespace UI
 		// Creates the window.
 		auto Create(this auto& self) -> decltype(self)
 		{
-			CreateArgs args = self.CreateArgs();
+			CreateWindowArgs args = self.CreateArgs();
 			self.m_hwnd = Win32::CreateWindowExW(
 				args.ExtendedStyle,
 				self.ClassName().data(),
@@ -81,6 +183,7 @@ export namespace UI
 				Win32::GetModuleHandleW(nullptr),
 				&self
 			);
+			self.Init();
 			return self;
 		}
 
@@ -189,7 +292,7 @@ export namespace UI
 	{
 		constexpr auto ClassName(this auto&&) noexcept -> std::wstring_view { return L"Calculator-Gui"; }
 
-		auto CreateArgs() -> CreateArgs
+		auto CreateArgs(this auto&& self) -> CreateWindowArgs
 		{
 			return { L"This is test!", Win32::WindowStyles::WsOverlappedWindow };
 		}
@@ -206,5 +309,12 @@ export namespace UI
 				.lpszClassName = self.ClassName().data()
 			};
 		}
+
+		auto Init(this MainWindow& self)
+		{
+			self.AButton.Create(self.m_hwnd);
+		}
+
+		Button AButton;
 	};
 }

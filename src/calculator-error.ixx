@@ -55,12 +55,12 @@ export namespace Error
 	struct Win32Error : Error
 	{
 		Win32Error(Win32::DWORD errorCode = Win32::GetLastError(), std::source_location loc = std::source_location::current())
-			: Error(Format(errorCode, "", loc))
+			: Error(Format(errorCode, "An error occurred", loc))
 		{
 		}
 
 		Win32Error(Win32::DWORD errorCode, std::string_view message, std::source_location loc = std::source_location::current())
-			: Error(Format(errorCode, "", loc))
+			: Error(Format(errorCode, message, loc))
 		{
 		}
 
@@ -71,7 +71,7 @@ export namespace Error
 			const std::source_location& loc
 		) -> std::string
 		{
-			return std::format("{}", errorCode);
+			return std::format("{}: {}", errorCode, SystemMessage::Format(errorCode));
 		}
 	};
 }

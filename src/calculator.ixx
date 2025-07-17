@@ -1,3 +1,6 @@
+#pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#pragma comment(lib, "comctl32.lib")
+
 export module calculator;
 export import :win32;
 export import :error;
@@ -14,21 +17,44 @@ export extern "C" auto wWinMain(
 	int nCmdShow
 ) -> int
 {
-	// register class
-	UI::MainWindow app;
-	app.Register().Create().Show().MainLoop();
+	try
+	{
+		Log::Scope scope;
+		
+		//Win32::InitCommonControls();
+		Win32::INITCOMMONCONTROLSEX icc{
+			icc.dwICC =
+				Win32::InitCommonControlsFlag::Animate |
+				Win32::InitCommonControlsFlag::NativeClass |
+				Win32::InitCommonControlsFlag::Standard | 
+				Win32::InitCommonControlsFlag::Cool |
+				Win32::InitCommonControlsFlag::Bar
+			,
+			icc.dwSize = sizeof(icc)
+		};
+		Win32::InitCommonControlsEx(&icc);
 
-	// create window
+		// register class
+		UI::MainWindow app;
+		app.Register().Create().Show().MainLoop();
 
-	// draw input windo
+		// create window
 
-	// draw buttons
+		// draw input windo
 
-	// read input
+		// draw buttons
 
-	// calculate result
+		// read input
 
-	// show result
+		// calculate result
+
+		// show result
+	}
+	catch (const std::exception& ex)
+	{
+		Log::Info("An error occurred: {}", ex.what());
+		Win32::MessageBoxA(nullptr, "Error", ex.what(), Win32::MessageBoxStyle::OK);
+	}
 
 	return 0;
 }
