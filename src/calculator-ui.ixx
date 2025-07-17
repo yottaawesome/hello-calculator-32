@@ -4,6 +4,28 @@ import :win32;
 import :error;
 import :raii;
 
+export namespace UI
+{
+	//
+	// Strongly-typed message.
+	template<Win32::DWORD VMsg>
+	struct Win32Message
+	{
+		static constexpr Win32::UINT uMsg = VMsg;
+		Win32::HWND Hwnd = nullptr;
+		Win32::WPARAM wParam = 0;
+		Win32::LPARAM lParam = 0;
+	};
+
+	struct GenericWin32Message
+	{
+		Win32::HWND Hwnd = nullptr;
+		Win32::UINT uMsg = 0;
+		Win32::WPARAM wParam = 0;
+		Win32::LPARAM lParam = 0;
+	};
+}
+
 // Controls
 export namespace UI
 {
@@ -49,7 +71,7 @@ export namespace UI
 			self.Init();
 		}
 
-		auto HandleMessage(
+		auto Process(
 			this auto&& self,
 			Win32::UINT msg,
 			Win32::WPARAM wParam,
@@ -58,7 +80,18 @@ export namespace UI
 			Win32::DWORD_PTR dwRefData
 		) -> Win32::LRESULT
 		{
-			return Win32::DefSubclassProc(self.m_window.get(), msg, wParam, lParam);
+			return self.HandleMessage(self.m_window.get(), msg, wParam, lParam);
+		}
+
+		auto HandleMessage(
+			this auto&& self,
+			Win32::HWND hwnd,
+			Win32::UINT msg,
+			Win32::WPARAM wParam,
+			Win32::LPARAM lParam
+		) -> Win32::LRESULT
+		{
+			return Win32::DefSubclassProc(hwnd, msg, wParam, lParam);
 		}
 
 
@@ -74,7 +107,7 @@ export namespace UI
 		{
 			TControl* pThis = reinterpret_cast<TControl*>(refData);
 			return pThis
-				? pThis->HandleMessage(msg, wParam, lParam, idSubclass, refData)
+				? pThis->Process(msg, wParam, lParam, idSubclass, refData)
 				: Win32::DefSubclassProc(hwnd, msg, wParam, lParam);
 		}
 
@@ -120,24 +153,7 @@ export namespace UI
 		Win32::HMENU Menu = 0;
 	};
 
-	//
-	// Strongly-typed message.
-	template<Win32::DWORD VMsg>
-	struct Win32Message
-	{
-		static constexpr Win32::UINT uMsg = VMsg;
-		Win32::HWND Hwnd = nullptr;
-		Win32::WPARAM wParam = 0;
-		Win32::LPARAM lParam = 0;
-	};
-
-	struct GenericWin32Message
-	{
-		Win32::HWND Hwnd = nullptr;
-		Win32::UINT uMsg = 0;
-		Win32::WPARAM wParam = 0;
-		Win32::LPARAM lParam = 0;
-	};
+	
 
 	struct Window
 	{
