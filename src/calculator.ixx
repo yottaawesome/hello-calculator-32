@@ -19,8 +19,6 @@ export extern "C" auto wWinMain(
 {
 	try
 	{
-		Log::Scope scope;
-		
 		//Win32::InitCommonControls();
 		Win32::INITCOMMONCONTROLSEX icc{
 			icc.dwICC =
