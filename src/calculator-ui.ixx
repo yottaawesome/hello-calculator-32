@@ -29,12 +29,13 @@ export namespace UI
 // Controls
 export namespace UI
 {
-	struct CreateControlArgs
+	struct ControlProperties
 	{
 		Win32::DWORD Id;
 		std::wstring_view Class;
-		std::optional<std::wstring_view> Text;
+		std::optional<std::wstring> Text;
 		Win32::DWORD Styles = 0;
+		Win32::DWORD ExtendedStyles = 0;
 		int X = 0;
 		int Y = 0;
 		int Width = 0;
@@ -43,44 +44,31 @@ export namespace UI
 
 	struct Control
 	{
+		Control() {}
+		Control(ControlProperties properties) : m_properties(properties) {}
+
 		auto Create(this auto&& self, Win32::HWND parent) -> void
 		{
-			CreateControlArgs args = self.GetCreateArgs();
-
-			HWND window = Win32::CreateWindowExW(
-				0,
-				args.Class.data(),
-				args.Text ? args.Text->data() : nullptr,
-				args.Styles,
-				args.X,
-				args.Y,
-				args.Width,
-				args.Height,
+			Win32::HWND window = Win32::CreateWindowExW(
+				self.m_properties.ExtendedStyles,
+				self.GetClass().data(),
+				self.m_properties.Text ? self.m_properties.Text->data() : nullptr,
+				self.m_properties.Styles,
+				self.m_properties.X,
+				self.m_properties.Y,
+				self.m_properties.Width,
+				self.m_properties.Height,
 				parent,
-				(Win32::HMENU)(Win32::UINT_PTR)(args.Id),
+				(Win32::HMENU)(Win32::UINT_PTR)(self.m_properties.Id),
 				Win32::GetModuleHandleW(nullptr),
 				nullptr
 			);
 			if (self.m_window = Raii::HwndUniquePtr(window); not self.m_window)
 				throw Error::Win32Error(Win32::GetLastError(), "Failed creating button.");
 			if (not Win32::SetWindowSubclass(self.m_window.get(), SubclassProc<std::remove_cvref_t<decltype(self)>>, 5, reinterpret_cast<Win32::DWORD_PTR>(&self)))
-			{
 				throw Error::Win32Error(Win32::GetLastError(), "Failed creating button.");
-			}
 
 			self.Init();
-		}
-
-		auto Process(
-			this auto&& self,
-			Win32::UINT msg,
-			Win32::WPARAM wParam,
-			Win32::LPARAM lParam,
-			Win32::UINT_PTR uIdSubclass,
-			Win32::DWORD_PTR dwRefData
-		) -> Win32::LRESULT
-		{
-			return self.HandleMessage(self.m_window.get(), msg, wParam, lParam);
 		}
 
 		auto HandleMessage(
@@ -88,12 +76,20 @@ export namespace UI
 			Win32::HWND hwnd,
 			Win32::UINT msg,
 			Win32::WPARAM wParam,
-			Win32::LPARAM lParam
+			Win32::LPARAM lParam,
+			Win32::UINT_PTR uIdSubclass,
+			Win32::DWORD_PTR dwRefData
 		) -> Win32::LRESULT
 		{
-			return Win32::DefSubclassProc(hwnd, msg, wParam, lParam);
+			if (msg == Win32::Messages::LeftButtonUp)
+				return self.Process(Win32Message<Win32::Messages::LeftButtonUp>{ hwnd, wParam, lParam });
+			return self.Process(GenericWin32Message{ .Hwnd = hwnd, .uMsg = msg, .wParam = wParam, .lParam = lParam });
 		}
 
+		auto Process(this auto&& self, auto&& msg) -> Win32::LRESULT
+		{
+			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
+		}
 
 		template<typename TControl>
 		static auto SubclassProc(
@@ -107,16 +103,34 @@ export namespace UI
 		{
 			TControl* pThis = reinterpret_cast<TControl*>(refData);
 			return pThis
-				? pThis->Process(msg, wParam, lParam, idSubclass, refData)
+				? pThis->HandleMessage(hwnd, msg, wParam, lParam, idSubclass, refData)
 				: Win32::DefSubclassProc(hwnd, msg, wParam, lParam);
 		}
 
+	protected:
+		ControlProperties m_properties;
 		Raii::HwndUniquePtr m_window = nullptr;
 	};
 
 	struct Button : Control
 	{
-		auto GetCreateArgs(this auto&& self) -> CreateControlArgs
+		Button() : Control(GetDefaultProperties()) {}
+
+		Button(ControlProperties properties)
+			: Control(properties)
+		{ }
+
+		constexpr void Init(this auto&& self)
+		{
+			//Win32::SetWindowRgn(self.m_window.get(), Win32::CreateRoundRectRgn(10, 10, 60, 110, 50, 50), true);
+		}
+
+		constexpr auto GetClass(this auto&&) noexcept -> std::wstring_view
+		{
+			return L"Button";
+		}
+
+		constexpr auto GetDefaultProperties(this auto&& self) -> ControlProperties
 		{
 			return {
 				.Id = 100,
@@ -128,12 +142,37 @@ export namespace UI
 				.Width = 100,
 				.Height = 50
 			};
+		};
+	};
+
+
+	constexpr auto NumberButtonHeight = 50;
+	constexpr auto NumberButtonWidth = 100;
+	template<unsigned VValue, unsigned VId, int VX, int VY>
+	struct NumberButton : Button
+	{
+		using Control::HandleMessage;
+
+		NumberButton() : Button(GetDefaultProperties()) {}
+
+		auto HandleMessage(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp>)
+		{
+			return 0;
 		}
 
-		void Init(this auto&& self)
+		constexpr auto GetDefaultProperties(this auto&& self) -> ControlProperties
 		{
-			//Win32::SetWindowRgn(self.m_window.get(), Win32::CreateRoundRectRgn(10, 10, 60, 110, 50, 50), true);
-		}
+			return {
+				.Id = VId,
+				.Class = L"Button",
+				.Text = std::to_wstring(VValue),
+				.Styles = Win32::Styles::PushButton | Win32::Styles::Child | Win32::Styles::Visible,
+				.X = VX,
+				.Y = VY,
+				.Width = NumberButtonWidth,
+				.Height = NumberButtonHeight
+			};
+		};
 	};
 }
 
@@ -152,8 +191,6 @@ export namespace UI
 		Win32::HWND hWndParent = 0;
 		Win32::HMENU Menu = 0;
 	};
-
-	
 
 	struct Window
 	{
@@ -301,6 +338,7 @@ export namespace UI
 			return Win32::DefWindowProcW(args.Hwnd, args.uMsg, args.wParam, args.lParam);
 		}
 
+	protected:
 		Win32::HWND m_hwnd = nullptr;
 	};
 
@@ -310,7 +348,12 @@ export namespace UI
 
 		auto CreateArgs(this auto&& self) -> CreateWindowArgs
 		{
-			return { L"This is test!", Win32::WindowStyles::WsOverlappedWindow };
+			return { 
+				.WindowName = L"Win32 Calculator", 
+				.Style = Win32::WindowStyles::WsOverlappedWindow, 
+				.Width = 500, 
+				.Height = 500 
+			};
 		}
 
 		auto GetClass(this auto&& self) noexcept -> Win32::WNDCLASSEXW
@@ -328,9 +371,26 @@ export namespace UI
 
 		auto Init(this MainWindow& self)
 		{
-			self.AButton.Create(self.m_hwnd);
+			[&self]<typename...TArgs>(std::tuple<TArgs...>& tuple)
+			{
+				(std::get<TArgs>(tuple).Create(self.m_hwnd), ...);
+			}(self.m_buttons);
 		}
 
-		Button AButton;
+	protected:
+		using ButtonGroup = std::tuple<
+			NumberButton<1, 100, 10 + NumberButtonWidth * 0, 10 + NumberButtonHeight * 0>,
+			NumberButton<2, 101, 10 + NumberButtonWidth * 1, 10 + NumberButtonHeight * 0>,
+			NumberButton<3, 102, 10 + NumberButtonWidth * 2, 10 + NumberButtonHeight * 0>,
+			NumberButton<4, 103, 10 + NumberButtonWidth * 0, 10 + NumberButtonHeight * 1>,
+			NumberButton<5, 104, 10 + NumberButtonWidth * 1, 10 + NumberButtonHeight * 1>,
+			NumberButton<6, 105, 10 + NumberButtonWidth * 2, 10 + NumberButtonHeight * 1>,
+			NumberButton<7, 106, 10 + NumberButtonWidth * 0, 10 + NumberButtonHeight * 2>,
+			NumberButton<8, 107, 10 + NumberButtonWidth * 1, 10 + NumberButtonHeight * 2>,
+			NumberButton<9, 108, 10 + NumberButtonWidth * 2, 10 + NumberButtonHeight * 2>,
+			NumberButton<0, 109, 10 + NumberButtonWidth * 0, 10 + NumberButtonHeight * 3>
+		>;
+
+		ButtonGroup m_buttons{};
 	};
 }
