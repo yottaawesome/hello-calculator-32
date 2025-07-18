@@ -24,6 +24,12 @@ export namespace UI
 		Win32::WPARAM wParam = 0;
 		Win32::LPARAM lParam = 0;
 	};
+
+	struct SimpleWindow
+	{
+	protected:
+		Raii::HwndUniquePtr m_window = nullptr;
+	};
 }
 
 // Controls
@@ -32,7 +38,7 @@ export namespace UI
 	struct ControlProperties
 	{
 		Win32::DWORD Id;
-		std::wstring_view Class;
+		std::wstring Class;
 		std::optional<std::wstring> Text;
 		Win32::DWORD Styles = 0;
 		Win32::DWORD ExtendedStyles = 0;
@@ -42,12 +48,12 @@ export namespace UI
 		int Height = 0;
 	};
 
-	struct Control
+	struct Control : SimpleWindow
 	{
-		Control() {}
-		Control(ControlProperties properties) : m_properties(properties) {}
+		constexpr Control() = default;
+		constexpr Control(ControlProperties properties) : m_properties(properties) {}
 
-		auto Create(this auto&& self, Win32::HWND parent) -> void
+		constexpr auto Create(this auto&& self, Win32::HWND parent) -> void
 		{
 			Win32::HWND window = Win32::CreateWindowExW(
 				self.m_properties.ExtendedStyles,
@@ -71,7 +77,7 @@ export namespace UI
 			self.Init();
 		}
 
-		auto HandleMessage(
+		constexpr auto HandleMessage(
 			this auto&& self,
 			Win32::HWND hwnd,
 			Win32::UINT msg,
@@ -86,13 +92,13 @@ export namespace UI
 			return self.Process(GenericWin32Message{ .Hwnd = hwnd, .uMsg = msg, .wParam = wParam, .lParam = lParam });
 		}
 
-		auto Process(this auto&& self, auto&& msg) -> Win32::LRESULT
+		constexpr auto Process(this auto&& self, auto&& msg) -> Win32::LRESULT
 		{
 			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
 		}
 
 		template<typename TControl>
-		static auto SubclassProc(
+		constexpr static auto SubclassProc(
 			Win32::HWND hwnd,
 			Win32::UINT msg,
 			Win32::WPARAM wParam,
@@ -109,14 +115,13 @@ export namespace UI
 
 	protected:
 		ControlProperties m_properties;
-		Raii::HwndUniquePtr m_window = nullptr;
 	};
 
 	struct Button : Control
 	{
-		Button() : Control(GetDefaultProperties()) {}
+		constexpr Button() : Control(GetDefaultProperties()) {}
 
-		Button(ControlProperties properties)
+		constexpr Button(ControlProperties properties)
 			: Control(properties)
 		{ }
 
@@ -145,17 +150,14 @@ export namespace UI
 		};
 	};
 
-
-	constexpr auto NumberButtonHeight = 50;
-	constexpr auto NumberButtonWidth = 100;
-	template<unsigned VValue, unsigned VId, int VX, int VY>
+	template<unsigned VValue, unsigned VId, int VX, int VY, int VWidth, int VHeight>
 	struct NumberButton : Button
 	{
 		using Control::HandleMessage;
 
-		NumberButton() : Button(GetDefaultProperties()) {}
+		constexpr NumberButton() : Button(GetDefaultProperties()) {}
 
-		auto HandleMessage(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp>)
+		constexpr auto HandleMessage(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp>)
 		{
 			return 0;
 		}
@@ -169,8 +171,8 @@ export namespace UI
 				.Styles = Win32::Styles::PushButton | Win32::Styles::Child | Win32::Styles::Visible,
 				.X = VX,
 				.Y = VY,
-				.Width = NumberButtonWidth,
-				.Height = NumberButtonHeight
+				.Width = VWidth,
+				.Height = VHeight
 			};
 		};
 	};
@@ -192,23 +194,16 @@ export namespace UI
 		Win32::HMENU Menu = 0;
 	};
 
-	struct Window
+	struct Window : SimpleWindow
 	{
-		~Window()
+		constexpr void Destroy(this auto&& self) noexcept
 		{
-			Destroy();
-		}
-
-		void Destroy(this auto&& self) noexcept
-		{
-			if (self.m_hwnd)
-				Win32::DestroyWindow(self.m_hwnd);
-			self.m_hwnd = nullptr;
+			self.m_window.reset();
 		}
 
 		//
 		// Registers the window class.
-		auto Register(this auto&& self) -> decltype(self)
+		constexpr auto Register(this auto&& self) -> decltype(self)
 		{
 			auto wndClass = self.GetClass();
 			wndClass.lpfnWndProc = WindowProc<std::remove_cvref_t<decltype(self)>>;
@@ -219,10 +214,10 @@ export namespace UI
 
 		//
 		// Creates the window.
-		auto Create(this auto& self) -> decltype(self)
+		constexpr auto Create(this auto& self) -> decltype(self)
 		{
 			CreateWindowArgs args = self.CreateArgs();
-			self.m_hwnd = Win32::CreateWindowExW(
+			Win32::HWND hwnd = Win32::CreateWindowExW(
 				args.ExtendedStyle,
 				self.ClassName().data(),
 				args.WindowName,
@@ -236,13 +231,14 @@ export namespace UI
 				Win32::GetModuleHandleW(nullptr),
 				&self
 			);
+			self.m_window = Raii::HwndUniquePtr(hwnd);
 			self.Init();
 			return self;
 		}
 
 		//
 		// Applications call this to retrieve messages.
-		auto MainLoop(this auto&& self) -> Win32::LRESULT
+		constexpr auto MainLoop(this auto&& self) -> Win32::LRESULT
 		{
 			if constexpr (true) // Basic loop
 			{
@@ -274,17 +270,17 @@ export namespace UI
 
 		//
 		// Shows or hide the window, if present.
-		auto Show(this auto&& self) noexcept -> decltype(self)
+		constexpr auto Show(this auto&& self) noexcept -> decltype(self)
 		{
-			if (self.m_hwnd)
-				Win32::ShowWindow(self.m_hwnd, Win32::ShowWindowOptions::ShowNormal);
+			if (self.m_window)
+				Win32::ShowWindow(self.m_window.get(), Win32::ShowWindowOptions::ShowNormal);
 			return self;
 		}
 
-		auto Hide(this auto&& self) noexcept -> decltype(self)
+		constexpr auto Hide(this auto&& self) noexcept -> decltype(self)
 		{
 			if (self.m_hwnd)
-				Win32::ShowWindow(self.m_hwnd, Win32::ShowWindowOptions::Hide);
+				Win32::ShowWindow(self.m_window.get(), Win32::ShowWindowOptions::Hide);
 			return self;
 		}
 
@@ -292,7 +288,7 @@ export namespace UI
 		//
 		// The main Window proc.
 		template<typename TWindow>
-		static auto WindowProc(Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) -> Win32::LRESULT
+		constexpr static auto WindowProc(Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) -> Win32::LRESULT
 		{
 			TWindow* pThis = nullptr;
 
@@ -302,7 +298,7 @@ export namespace UI
 				pThis = (TWindow*)pCreate->lpCreateParams;
 				Win32::SetWindowLongPtrW(hwnd, Win32::Gwlp_UserData, (Win32::LONG_PTR)pThis);
 
-				pThis->m_hwnd = hwnd;
+				pThis->m_window = Raii::HwndUniquePtr(hwnd);
 			}
 			else
 			{
@@ -317,7 +313,7 @@ export namespace UI
 		//
 		// Called by WindowProc, which then dispatches the message to either the generic handler
 		// or specific handlers by subclasses.
-		auto HandleMessage(this auto&& self, Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) -> Win32::LRESULT
+		constexpr auto HandleMessage(this auto&& self, Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) -> Win32::LRESULT
 		{
 			if (uMsg == Win32::Messages::Destroy)
 				return self.Process(Win32Message<Win32::Messages::Destroy>{ hwnd, wParam, lParam });
@@ -328,7 +324,7 @@ export namespace UI
 
 		//
 		// The generic message handler.
-		auto Process(this Window& self, auto&& args) noexcept -> Win32::LRESULT
+		constexpr auto Process(this Window& self, auto&& args) noexcept -> Win32::LRESULT
 		{
 			if (args.uMsg == Win32::Messages::Destroy)
 			{
@@ -337,16 +333,13 @@ export namespace UI
 			}
 			return Win32::DefWindowProcW(args.Hwnd, args.uMsg, args.wParam, args.lParam);
 		}
-
-	protected:
-		Win32::HWND m_hwnd = nullptr;
 	};
 
 	struct MainWindow : Window
 	{
 		constexpr auto ClassName(this auto&&) noexcept -> std::wstring_view { return L"Calculator-Gui"; }
 
-		auto CreateArgs(this auto&& self) -> CreateWindowArgs
+		constexpr auto CreateArgs(this auto&& self) -> CreateWindowArgs
 		{
 			return { 
 				.WindowName = L"Win32 Calculator", 
@@ -356,7 +349,7 @@ export namespace UI
 			};
 		}
 
-		auto GetClass(this auto&& self) noexcept -> Win32::WNDCLASSEXW
+		constexpr auto GetClass(this auto&& self) noexcept -> Win32::WNDCLASSEXW
 		{
 			return Win32::WNDCLASSEXW{
 				.cbSize = sizeof(Win32::WNDCLASSEXW),
@@ -369,26 +362,31 @@ export namespace UI
 			};
 		}
 
-		auto Init(this MainWindow& self)
+		constexpr auto Init(this auto& self)
 		{
 			[&self]<typename...TArgs>(std::tuple<TArgs...>& tuple)
 			{
-				(std::get<TArgs>(tuple).Create(self.m_hwnd), ...);
+				(std::get<TArgs>(tuple).Create(self.m_window.get()), ...);
 			}(self.m_buttons);
 		}
 
 	protected:
+		static constexpr auto NumberButtonWidth = 100;
+		static constexpr auto NumberButtonHeight = 50;
+		static constexpr auto PaddingX = 10;
+		static constexpr auto PaddingY = 10;
+
 		using ButtonGroup = std::tuple<
-			NumberButton<1, 100, 10 + NumberButtonWidth * 0, 10 + NumberButtonHeight * 0>,
-			NumberButton<2, 101, 10 + NumberButtonWidth * 1, 10 + NumberButtonHeight * 0>,
-			NumberButton<3, 102, 10 + NumberButtonWidth * 2, 10 + NumberButtonHeight * 0>,
-			NumberButton<4, 103, 10 + NumberButtonWidth * 0, 10 + NumberButtonHeight * 1>,
-			NumberButton<5, 104, 10 + NumberButtonWidth * 1, 10 + NumberButtonHeight * 1>,
-			NumberButton<6, 105, 10 + NumberButtonWidth * 2, 10 + NumberButtonHeight * 1>,
-			NumberButton<7, 106, 10 + NumberButtonWidth * 0, 10 + NumberButtonHeight * 2>,
-			NumberButton<8, 107, 10 + NumberButtonWidth * 1, 10 + NumberButtonHeight * 2>,
-			NumberButton<9, 108, 10 + NumberButtonWidth * 2, 10 + NumberButtonHeight * 2>,
-			NumberButton<0, 109, 10 + NumberButtonWidth * 0, 10 + NumberButtonHeight * 3>
+			NumberButton<1, 101, PaddingX + NumberButtonWidth * 0, PaddingY + NumberButtonHeight * 0, NumberButtonWidth, NumberButtonHeight>,
+			NumberButton<2, 102, PaddingX + NumberButtonWidth * 1, PaddingY + NumberButtonHeight * 0, NumberButtonWidth, NumberButtonHeight>,
+			NumberButton<3, 103, PaddingX + NumberButtonWidth * 2, PaddingY + NumberButtonHeight * 0, NumberButtonWidth, NumberButtonHeight>,
+			NumberButton<4, 104, PaddingX + NumberButtonWidth * 0, PaddingY + NumberButtonHeight * 1, NumberButtonWidth, NumberButtonHeight>,
+			NumberButton<5, 105, PaddingX + NumberButtonWidth * 1, PaddingY + NumberButtonHeight * 1, NumberButtonWidth, NumberButtonHeight>,
+			NumberButton<6, 106, PaddingX + NumberButtonWidth * 2, PaddingY + NumberButtonHeight * 1, NumberButtonWidth, NumberButtonHeight>,
+			NumberButton<7, 107, PaddingX + NumberButtonWidth * 0, PaddingY + NumberButtonHeight * 2, NumberButtonWidth, NumberButtonHeight>,
+			NumberButton<8, 108, PaddingX + NumberButtonWidth * 1, PaddingY + NumberButtonHeight * 2, NumberButtonWidth, NumberButtonHeight>,
+			NumberButton<9, 109, PaddingX + NumberButtonWidth * 2, PaddingY + NumberButtonHeight * 2, NumberButtonWidth, NumberButtonHeight>,
+			NumberButton<0, 100, PaddingX + NumberButtonWidth * 0, PaddingY + NumberButtonHeight * 3, NumberButtonWidth, NumberButtonHeight>
 		>;
 
 		ButtonGroup m_buttons{};
