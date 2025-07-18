@@ -39,7 +39,7 @@ export namespace UI
 	{
 		Win32::DWORD Id;
 		std::wstring Class;
-		std::optional<std::wstring> Text;
+		std::wstring Text;
 		Win32::DWORD Styles = 0;
 		Win32::DWORD ExtendedStyles = 0;
 		int X = 0;
@@ -50,15 +50,15 @@ export namespace UI
 
 	struct Control : SimpleWindow
 	{
-		constexpr Control() = default;
-		constexpr Control(ControlProperties properties) : m_properties(properties) {}
+		Control() = default;
+		Control(ControlProperties properties) : m_properties(properties) {}
 
-		constexpr auto Create(this auto&& self, Win32::HWND parent) -> void
+		auto Create(this auto&& self, Win32::HWND parent) -> void
 		{
 			Win32::HWND window = Win32::CreateWindowExW(
 				self.m_properties.ExtendedStyles,
 				self.GetClass().data(),
-				self.m_properties.Text ? self.m_properties.Text->data() : nullptr,
+				self.m_properties.Text.empty() ? nullptr : self.m_properties.Text.data(),
 				self.m_properties.Styles,
 				self.m_properties.X,
 				self.m_properties.Y,
@@ -77,7 +77,7 @@ export namespace UI
 			self.Init();
 		}
 
-		constexpr auto HandleMessage(
+		auto HandleMessage(
 			this auto&& self,
 			Win32::HWND hwnd,
 			Win32::UINT msg,
@@ -92,13 +92,13 @@ export namespace UI
 			return self.Process(GenericWin32Message{ .Hwnd = hwnd, .uMsg = msg, .wParam = wParam, .lParam = lParam });
 		}
 
-		constexpr auto Process(this auto&& self, auto&& msg) -> Win32::LRESULT
+		auto Process(this auto&& self, auto&& msg) -> Win32::LRESULT
 		{
 			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
 		}
 
 		template<typename TControl>
-		constexpr static auto SubclassProc(
+		static auto SubclassProc(
 			Win32::HWND hwnd,
 			Win32::UINT msg,
 			Win32::WPARAM wParam,
@@ -119,23 +119,23 @@ export namespace UI
 
 	struct Button : Control
 	{
-		constexpr Button() : Control(GetDefaultProperties()) {}
+		Button() : Control(GetDefaultProperties()) {}
 
-		constexpr Button(ControlProperties properties)
+		Button(ControlProperties properties)
 			: Control(properties)
 		{ }
 
-		constexpr void Init(this auto&& self)
+		void Init(this auto&& self)
 		{
 			//Win32::SetWindowRgn(self.m_window.get(), Win32::CreateRoundRectRgn(10, 10, 60, 110, 50, 50), true);
 		}
 
-		constexpr auto GetClass(this auto&&) noexcept -> std::wstring_view
+		auto GetClass(this auto&&) noexcept -> std::wstring_view
 		{
 			return L"Button";
 		}
 
-		constexpr auto GetDefaultProperties(this auto&& self) -> ControlProperties
+		auto GetDefaultProperties(this auto&& self) -> ControlProperties
 		{
 			return {
 				.Id = 100,
@@ -155,14 +155,14 @@ export namespace UI
 	{
 		using Control::HandleMessage;
 
-		constexpr NumberButton() : Button(GetDefaultProperties()) {}
+		NumberButton() : Button(GetDefaultProperties()) {}
 
-		constexpr auto HandleMessage(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp>)
+		auto HandleMessage(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp>)
 		{
 			return 0;
 		}
 
-		constexpr auto GetDefaultProperties(this auto&& self) -> ControlProperties
+		auto GetDefaultProperties(this auto&& self) -> ControlProperties
 		{
 			return {
 				.Id = VId,
@@ -196,14 +196,14 @@ export namespace UI
 
 	struct Window : SimpleWindow
 	{
-		constexpr void Destroy(this auto&& self) noexcept
+		void Destroy(this auto&& self) noexcept
 		{
 			self.m_window.reset();
 		}
 
 		//
 		// Registers the window class.
-		constexpr auto Register(this auto&& self) -> decltype(self)
+		auto Register(this auto&& self) -> decltype(self)
 		{
 			auto wndClass = self.GetClass();
 			wndClass.lpfnWndProc = WindowProc<std::remove_cvref_t<decltype(self)>>;
@@ -214,7 +214,7 @@ export namespace UI
 
 		//
 		// Creates the window.
-		constexpr auto Create(this auto& self) -> decltype(self)
+		auto Create(this auto& self) -> decltype(self)
 		{
 			CreateWindowArgs args = self.CreateArgs();
 			Win32::HWND hwnd = Win32::CreateWindowExW(
@@ -238,7 +238,7 @@ export namespace UI
 
 		//
 		// Applications call this to retrieve messages.
-		constexpr auto MainLoop(this auto&& self) -> Win32::LRESULT
+		auto MainLoop(this auto&& self) -> Win32::LRESULT
 		{
 			if constexpr (true) // Basic loop
 			{
@@ -270,14 +270,14 @@ export namespace UI
 
 		//
 		// Shows or hide the window, if present.
-		constexpr auto Show(this auto&& self) noexcept -> decltype(self)
+		auto Show(this auto&& self) noexcept -> decltype(self)
 		{
 			if (self.m_window)
 				Win32::ShowWindow(self.m_window.get(), Win32::ShowWindowOptions::ShowNormal);
 			return self;
 		}
 
-		constexpr auto Hide(this auto&& self) noexcept -> decltype(self)
+		auto Hide(this auto&& self) noexcept -> decltype(self)
 		{
 			if (self.m_hwnd)
 				Win32::ShowWindow(self.m_window.get(), Win32::ShowWindowOptions::Hide);
@@ -288,7 +288,7 @@ export namespace UI
 		//
 		// The main Window proc.
 		template<typename TWindow>
-		constexpr static auto WindowProc(Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) -> Win32::LRESULT
+		static auto WindowProc(Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) -> Win32::LRESULT
 		{
 			TWindow* pThis = nullptr;
 
@@ -313,7 +313,7 @@ export namespace UI
 		//
 		// Called by WindowProc, which then dispatches the message to either the generic handler
 		// or specific handlers by subclasses.
-		constexpr auto HandleMessage(this auto&& self, Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) -> Win32::LRESULT
+		auto HandleMessage(this auto&& self, Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) -> Win32::LRESULT
 		{
 			if (uMsg == Win32::Messages::Destroy)
 				return self.Process(Win32Message<Win32::Messages::Destroy>{ hwnd, wParam, lParam });
@@ -324,7 +324,7 @@ export namespace UI
 
 		//
 		// The generic message handler.
-		constexpr auto Process(this Window& self, auto&& args) noexcept -> Win32::LRESULT
+		auto Process(this Window& self, auto&& args) noexcept -> Win32::LRESULT
 		{
 			if (args.uMsg == Win32::Messages::Destroy)
 			{
@@ -337,9 +337,9 @@ export namespace UI
 
 	struct MainWindow : Window
 	{
-		constexpr auto ClassName(this auto&&) noexcept -> std::wstring_view { return L"Calculator-Gui"; }
+		auto ClassName(this auto&&) noexcept -> std::wstring_view { return L"Calculator-Gui"; }
 
-		constexpr auto CreateArgs(this auto&& self) -> CreateWindowArgs
+		auto CreateArgs(this auto&& self) -> CreateWindowArgs
 		{
 			return { 
 				.WindowName = L"Win32 Calculator", 
@@ -349,7 +349,7 @@ export namespace UI
 			};
 		}
 
-		constexpr auto GetClass(this auto&& self) noexcept -> Win32::WNDCLASSEXW
+		auto GetClass(this auto&& self) noexcept -> Win32::WNDCLASSEXW
 		{
 			return Win32::WNDCLASSEXW{
 				.cbSize = sizeof(Win32::WNDCLASSEXW),
@@ -362,7 +362,7 @@ export namespace UI
 			};
 		}
 
-		constexpr auto Init(this auto& self)
+		auto Init(this auto& self)
 		{
 			[&self]<typename...TArgs>(std::tuple<TArgs...>& tuple)
 			{
