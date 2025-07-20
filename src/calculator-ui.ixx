@@ -123,7 +123,8 @@ export namespace UI
 
 		Button(ControlProperties properties)
 			: Control(properties)
-		{ }
+		{
+		}
 
 		void Init(this auto&& self)
 		{
@@ -168,7 +169,56 @@ export namespace UI
 				.Id = VId,
 				.Class = L"Button",
 				.Text = std::to_wstring(VValue),
-				.Styles = Win32::Styles::PushButton | Win32::Styles::Child | Win32::Styles::Visible,
+				.Styles = Win32::Styles::DefPushButton | Win32::Styles::Child | Win32::Styles::Visible,
+				.X = VX,
+				.Y = VY,
+				.Width = VWidth,
+				.Height = VHeight
+			};
+		};
+	};
+
+	template<size_t N, typename TChar>
+	struct FixedString
+	{
+		using TStringView = std::basic_string_view<TChar, std::char_traits<TChar>>;
+		using TString = std::basic_string<TChar, std::char_traits<TChar>>;
+
+		TChar Buffer[N];
+		
+		consteval FixedString(const TChar(&buffer)[N]) noexcept
+		{
+			std::copy_n(buffer, N, Buffer);
+		}
+
+		constexpr auto ToView(this auto self) noexcept -> TStringView
+		{
+			return TStringView{ self.Buffer };
+		}
+
+		constexpr auto ToString(this auto self) noexcept -> TString
+		{
+			return TString{ self.Buffer };
+		}
+	};
+	template<size_t N>
+	FixedString(const char(&)[N]) -> FixedString<N, char>;
+	template<size_t N>
+	FixedString(const wchar_t(&)[N]) -> FixedString<N, wchar_t>;
+
+	template<FixedString VText, unsigned VId, int VX, int VY, int VWidth, int VHeight>
+	struct OperationButton : Button
+	{
+		using Control::HandleMessage;
+		OperationButton() : Button(GetDefaultProperties()) {}
+
+		auto GetDefaultProperties(this auto&& self) -> ControlProperties
+		{
+			return {
+				.Id = VId,
+				.Class = L"Button",
+				.Text = VText.Buffer,
+				.Styles = Win32::Styles::DefPushButton | Win32::Styles::Child | Win32::Styles::Visible,
 				.X = VX,
 				.Y = VY,
 				.Width = VWidth,
@@ -371,22 +421,28 @@ export namespace UI
 		}
 
 	protected:
-		static constexpr auto NumberButtonWidth = 100;
-		static constexpr auto NumberButtonHeight = 50;
+		static constexpr auto ButtonWidth = 100;
+		static constexpr auto ButtonHeight = 50;
 		static constexpr auto PaddingX = 10;
 		static constexpr auto PaddingY = 10;
 
 		using ButtonGroup = std::tuple<
-			NumberButton<1, 101, PaddingX + NumberButtonWidth * 0, PaddingY + NumberButtonHeight * 0, NumberButtonWidth, NumberButtonHeight>,
-			NumberButton<2, 102, PaddingX + NumberButtonWidth * 1, PaddingY + NumberButtonHeight * 0, NumberButtonWidth, NumberButtonHeight>,
-			NumberButton<3, 103, PaddingX + NumberButtonWidth * 2, PaddingY + NumberButtonHeight * 0, NumberButtonWidth, NumberButtonHeight>,
-			NumberButton<4, 104, PaddingX + NumberButtonWidth * 0, PaddingY + NumberButtonHeight * 1, NumberButtonWidth, NumberButtonHeight>,
-			NumberButton<5, 105, PaddingX + NumberButtonWidth * 1, PaddingY + NumberButtonHeight * 1, NumberButtonWidth, NumberButtonHeight>,
-			NumberButton<6, 106, PaddingX + NumberButtonWidth * 2, PaddingY + NumberButtonHeight * 1, NumberButtonWidth, NumberButtonHeight>,
-			NumberButton<7, 107, PaddingX + NumberButtonWidth * 0, PaddingY + NumberButtonHeight * 2, NumberButtonWidth, NumberButtonHeight>,
-			NumberButton<8, 108, PaddingX + NumberButtonWidth * 1, PaddingY + NumberButtonHeight * 2, NumberButtonWidth, NumberButtonHeight>,
-			NumberButton<9, 109, PaddingX + NumberButtonWidth * 2, PaddingY + NumberButtonHeight * 2, NumberButtonWidth, NumberButtonHeight>,
-			NumberButton<0, 100, PaddingX + NumberButtonWidth * 0, PaddingY + NumberButtonHeight * 3, NumberButtonWidth, NumberButtonHeight>
+			NumberButton<1, 101, PaddingX + ButtonWidth * 0, PaddingY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
+			NumberButton<2, 102, PaddingX + ButtonWidth * 1, PaddingY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
+			NumberButton<3, 103, PaddingX + ButtonWidth * 2, PaddingY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
+			OperationButton<L"+", 111, PaddingX + ButtonWidth * 3, PaddingY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
+			NumberButton<4, 104, PaddingX + ButtonWidth * 0, PaddingY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
+			NumberButton<5, 105, PaddingX + ButtonWidth * 1, PaddingY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
+			NumberButton<6, 106, PaddingX + ButtonWidth * 2, PaddingY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
+			OperationButton<L"-", 112, PaddingX + ButtonWidth * 3, PaddingY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
+			NumberButton<7, 107, PaddingX + ButtonWidth * 0, PaddingY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
+			NumberButton<8, 108, PaddingX + ButtonWidth * 1, PaddingY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
+			NumberButton<9, 109, PaddingX + ButtonWidth * 2, PaddingY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
+			OperationButton<L"x", 113, PaddingX + ButtonWidth * 3, PaddingY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
+			NumberButton<0, 100, PaddingX + ButtonWidth * 0, PaddingY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
+			OperationButton<L".", 114, PaddingX + ButtonWidth * 1, PaddingY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
+			OperationButton<L"=", 115, PaddingX + ButtonWidth * 2, PaddingY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
+			OperationButton<L"%", 116, PaddingX + ButtonWidth * 3, PaddingY + ButtonHeight * 3, ButtonWidth, ButtonHeight>
 		>;
 
 		ButtonGroup m_buttons{};
