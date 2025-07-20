@@ -183,7 +183,9 @@
     <ClCompile Include="calculator-error.ixx" />
     <ClCompile Include="calculator-log.ixx" />
     <ClCompile Include="calculator-raii.ixx" />
-    <ClCompile Include="calculator-ui.ixx" />
+    <ClCompile Include="calculator-ui_window.ixx" />
+    <ClCompile Include="calculator-ui_common.ixx" />
+    <ClCompile Include="calculator-ui_control.ixx" />
     <ClCompile Include="calculator.ixx" />
     <ClCompile Include="calculator-win32.ixx" />
   </ItemGroup>

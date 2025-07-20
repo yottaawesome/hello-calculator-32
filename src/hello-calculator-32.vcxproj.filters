@@ -27,10 +27,16 @@
     <ClCompile Include="calculator-raii.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calculator-ui.ixx">
+    <ClCompile Include="calculator-ui_window.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="calculator-log.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="calculator-ui_common.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="calculator-ui_control.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
