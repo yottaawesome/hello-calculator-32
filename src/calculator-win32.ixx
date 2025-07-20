@@ -55,6 +55,7 @@ export namespace Win32
 		::UINT32,
 		::UINT_PTR,
 		::DWORD_PTR,
+		::INITCOMMONCONTROLSEX,
 		::MessageBoxA,
 		::MessageBoxW,
 		::DefSubclassProc,
@@ -98,11 +99,12 @@ export namespace Win32
 		::WriteConsoleA,
 		::WriteConsoleW,
 		::FreeConsole,
-		::INITCOMMONCONTROLSEX,
 		::InitCommonControlsEx,
 		::SetWindowRgn,
 		::CreateRectRgn,
-		::CreateRoundRectRgn
+		::CreateRoundRectRgn,
+		::WideCharToMultiByte,
+		::MultiByteToWideChar
 		;
 
 	constexpr auto Gwlp_UserData = GWLP_USERDATA;
@@ -229,4 +231,7 @@ export namespace Win32
 
 	constexpr Win32Constant<IDI_APPLICATION> IdiApplication;
 	constexpr Win32Constant<IDC_ARROW> IdcArrow;
+
+	constexpr auto CpUtf8 = CP_UTF8;
+	constexpr auto WcNoBestFitChars = WC_NO_BEST_FIT_CHARS;
 }

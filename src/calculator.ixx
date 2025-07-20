@@ -5,6 +5,7 @@ export module calculator;
 export import :win32;
 export import :error;
 export import :raii;
+export import :string;
 export import :ui_window;
 export import :ui_control;
 export import :ui_common;

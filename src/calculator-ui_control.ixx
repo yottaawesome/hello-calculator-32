@@ -3,6 +3,7 @@ import std;
 import :win32;
 import :ui_common;
 import :error;
+import :string;
 
 // Controls
 export namespace UI
@@ -150,35 +151,7 @@ export namespace UI
 		};
 	};
 
-	template<size_t N, typename TChar>
-	struct FixedString
-	{
-		using TStringView = std::basic_string_view<TChar, std::char_traits<TChar>>;
-		using TString = std::basic_string<TChar, std::char_traits<TChar>>;
-
-		TChar Buffer[N];
-
-		consteval FixedString(const TChar(&buffer)[N]) noexcept
-		{
-			std::copy_n(buffer, N, Buffer);
-		}
-
-		constexpr auto ToView(this auto self) noexcept -> TStringView
-		{
-			return TStringView{ self.Buffer };
-		}
-
-		constexpr auto ToString(this auto self) noexcept -> TString
-		{
-			return TString{ self.Buffer };
-		}
-	};
-	template<size_t N>
-	FixedString(const char(&)[N]) -> FixedString<N, char>;
-	template<size_t N>
-	FixedString(const wchar_t(&)[N]) -> FixedString<N, wchar_t>;
-
-	template<FixedString VText, unsigned VId, int VX, int VY, int VWidth, int VHeight>
+	template<String::FixedString VText, unsigned VId, int VX, int VY, int VWidth, int VHeight>
 	struct OperationButton : Button
 	{
 		using Control::HandleMessage;
