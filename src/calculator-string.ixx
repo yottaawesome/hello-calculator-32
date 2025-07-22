@@ -17,12 +17,12 @@ export namespace String
 			std::copy_n(buffer, N, Buffer);
 		}
 
-		constexpr auto ToView(this auto self) noexcept -> TStringView
+		constexpr auto ToView(this const auto& self) noexcept -> TStringView
 		{
 			return TStringView{ self.Buffer };
 		}
 
-		constexpr auto ToString(this auto self) noexcept -> TString
+		constexpr auto ToString(this const auto& self) noexcept -> TString
 		{
 			return TString{ self.Buffer };
 		}

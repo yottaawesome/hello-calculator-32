@@ -20,4 +20,6 @@ export namespace Raii
 	using LocalHeapUniquePtr = IndirectUniquePtr<Win32::HLOCAL, Win32::LocalFree>;
 
 	using HwndUniquePtr = IndirectUniquePtr<Win32::HWND, Win32::DestroyWindow>;
+
+	using FontUniquePtr = IndirectUniquePtr<Win32::HFONT, Win32::DeleteObject>;
 }

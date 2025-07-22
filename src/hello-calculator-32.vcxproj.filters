@@ -42,5 +42,8 @@
     <ClCompile Include="calculator-string.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="calculator-ui_font.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

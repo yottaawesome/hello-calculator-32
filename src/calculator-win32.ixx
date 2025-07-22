@@ -56,6 +56,8 @@ export namespace Win32
 		::UINT_PTR,
 		::DWORD_PTR,
 		::INITCOMMONCONTROLSEX,
+		::NONCLIENTMETRICS,
+		::HFONT,
 		::MessageBoxA,
 		::MessageBoxW,
 		::DefSubclassProc,
@@ -104,11 +106,18 @@ export namespace Win32
 		::CreateRectRgn,
 		::CreateRoundRectRgn,
 		::WideCharToMultiByte,
-		::MultiByteToWideChar
+		::MultiByteToWideChar,
+		::DeleteObject,
+		::CreatePrivateNamespaceW,
+		::CreatePrivateObjectSecurity,
+		::CreateFontIndirectW,
+		::SystemParametersInfoW,
+		::SendMessageW
 		;
 
 	constexpr auto Gwlp_UserData = GWLP_USERDATA;
 	constexpr auto CwUseDefault = CW_USEDEFAULT;
+	constexpr auto SpiGetNonClientMetrics = SPI_GETNONCLIENTMETRICS;
 
 	namespace InitCommonControlsFlag
 	{
@@ -174,7 +183,8 @@ export namespace Win32
 			Command = WM_COMMAND,
 			CtlColorBtn = WM_CTLCOLORBTN,
 			Notify = WM_NOTIFY,
-			CustomDraw = NM_CUSTOMDRAW
+			CustomDraw = NM_CUSTOMDRAW,
+			SetFont = WM_SETFONT
 		};
 	}
 

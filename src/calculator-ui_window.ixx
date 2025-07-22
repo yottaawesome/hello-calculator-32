@@ -5,6 +5,7 @@ import :error;
 import :raii;
 import :ui_common;
 import :ui_control;
+import :ui_font;
 
 // Windows
 export namespace UI
@@ -24,11 +25,6 @@ export namespace UI
 
 	struct Window : SimpleWindow
 	{
-		void Destroy(this auto&& self) noexcept
-		{
-			self.m_window.reset();
-		}
-
 		//
 		// Registers the window class.
 		auto Register(this auto&& self) -> decltype(self)
@@ -192,10 +188,16 @@ export namespace UI
 
 		auto Init(this auto& self)
 		{
-			[&self]<typename...TArgs>(std::tuple<TArgs...>& tuple)
+			self.SetFont(UI::SystemFont.Get());
+			// Create child windows and set their font.
+			[]<typename...TArgs>(auto& self, std::tuple<TArgs...>& tuple)
 			{
-				(std::get<TArgs>(tuple).Create(self.m_window.get()), ...);
-			}(self.m_buttons);
+				([](Win32::HWND parent, auto& control)
+				{
+					control.Create(parent);
+					control.SetFont(UI::SystemFont.Get());
+				}(self.m_window.get(), std::get<TArgs>(tuple)), ...);
+			}(self, self.m_buttons);
 		}
 
 	protected:
