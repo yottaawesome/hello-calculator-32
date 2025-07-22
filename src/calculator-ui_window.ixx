@@ -203,26 +203,26 @@ export namespace UI
 	protected:
 		static constexpr auto ButtonWidth = 100;
 		static constexpr auto ButtonHeight = 50;
-		static constexpr auto PaddingX = 10;
-		static constexpr auto PaddingY = 10;
+		static constexpr auto StartX = 50;
+		static constexpr auto StartY = 50;
 
 		using ButtonGroup = std::tuple<
-			NumberButton<1, 101, PaddingX + ButtonWidth * 0, PaddingY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
-			NumberButton<2, 102, PaddingX + ButtonWidth * 1, PaddingY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
-			NumberButton<3, 103, PaddingX + ButtonWidth * 2, PaddingY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
-			OperationButton<L"+", 111, PaddingX + ButtonWidth * 3, PaddingY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
-			NumberButton<4, 104, PaddingX + ButtonWidth * 0, PaddingY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
-			NumberButton<5, 105, PaddingX + ButtonWidth * 1, PaddingY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
-			NumberButton<6, 106, PaddingX + ButtonWidth * 2, PaddingY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
-			OperationButton<L"-", 112, PaddingX + ButtonWidth * 3, PaddingY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
-			NumberButton<7, 107, PaddingX + ButtonWidth * 0, PaddingY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
-			NumberButton<8, 108, PaddingX + ButtonWidth * 1, PaddingY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
-			NumberButton<9, 109, PaddingX + ButtonWidth * 2, PaddingY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
-			OperationButton<L"x", 113, PaddingX + ButtonWidth * 3, PaddingY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
-			NumberButton<0, 100, PaddingX + ButtonWidth * 0, PaddingY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
-			OperationButton<L".", 114, PaddingX + ButtonWidth * 1, PaddingY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
-			OperationButton<L"=", 115, PaddingX + ButtonWidth * 2, PaddingY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
-			OperationButton<L"%", 116, PaddingX + ButtonWidth * 3, PaddingY + ButtonHeight * 3, ButtonWidth, ButtonHeight>
+			NumberButton<1, 101, StartX + ButtonWidth * 0, StartY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
+			NumberButton<2, 102, StartX + ButtonWidth * 1, StartY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
+			NumberButton<3, 103, StartX + ButtonWidth * 2, StartY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
+			OperationButton<L"+", 111, StartX + ButtonWidth * 3, StartY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
+			NumberButton<4, 104, StartX + ButtonWidth * 0, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
+			NumberButton<5, 105, StartX + ButtonWidth * 1, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
+			NumberButton<6, 106, StartX + ButtonWidth * 2, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
+			OperationButton<L"-", 112, StartX + ButtonWidth * 3, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
+			NumberButton<7, 107, StartX + ButtonWidth * 0, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
+			NumberButton<8, 108, StartX + ButtonWidth * 1, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
+			NumberButton<9, 109, StartX + ButtonWidth * 2, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
+			OperationButton<L"x", 113, StartX + ButtonWidth * 3, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
+			NumberButton<0, 100, StartX + ButtonWidth * 0, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
+			OperationButton<L".", 114, StartX + ButtonWidth * 1, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
+			OperationButton<L"=", 115, StartX + ButtonWidth * 2, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
+			OperationButton<L"%", 116, StartX + ButtonWidth * 3, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>
 		>;
 
 		ButtonGroup m_buttons{};
