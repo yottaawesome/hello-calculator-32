@@ -33,6 +33,21 @@ export namespace UI
 			if (self.m_window)
 				Win32::SendMessageW(self.m_window.get(), Win32::Messages::SetFont, reinterpret_cast<Win32::WPARAM>(font), true);
 		}
+		//
+		// Shows or hide the window, if present.
+		auto Show(this auto& self) noexcept -> decltype(self)
+		{
+			if (self.m_window)
+				Win32::ShowWindow(self.m_window.get(), Win32::ShowWindowOptions::ShowNormal);
+			return self;
+		}
+
+		auto Hide(this auto& self) noexcept -> decltype(self)
+		{
+			if (self.m_hwnd)
+				Win32::ShowWindow(self.m_window.get(), Win32::ShowWindowOptions::Hide);
+			return self;
+		}
 	protected:
 		Raii::HwndUniquePtr m_window = nullptr;
 	};

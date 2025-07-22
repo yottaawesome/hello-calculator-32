@@ -92,22 +92,6 @@ export namespace UI
 			}
 		}
 
-		//
-		// Shows or hide the window, if present.
-		auto Show(this auto&& self) noexcept -> decltype(self)
-		{
-			if (self.m_window)
-				Win32::ShowWindow(self.m_window.get(), Win32::ShowWindowOptions::ShowNormal);
-			return self;
-		}
-
-		auto Hide(this auto&& self) noexcept -> decltype(self)
-		{
-			if (self.m_hwnd)
-				Win32::ShowWindow(self.m_window.get(), Win32::ShowWindowOptions::Hide);
-			return self;
-		}
-
 	protected:
 		//
 		// The main Window proc.
@@ -161,6 +145,13 @@ export namespace UI
 
 	struct MainWindow : Window
 	{
+		using Window::Process;
+
+		auto Process(Win32Message<Win32::Messages::Paint> message) -> Win32::LRESULT
+		{
+			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
+		}
+
 		auto ClassName(this auto&&) noexcept -> std::wstring_view { return L"Calculator-Gui"; }
 
 		auto CreateArgs(this auto&& self) -> CreateWindowArgs

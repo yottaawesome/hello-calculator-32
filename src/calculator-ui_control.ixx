@@ -4,6 +4,7 @@ import :win32;
 import :ui_common;
 import :error;
 import :string;
+import :log;
 
 // Controls
 export namespace UI
@@ -44,7 +45,7 @@ export namespace UI
 			);
 			if (self.m_window = Raii::HwndUniquePtr(window); not self.m_window)
 				throw Error::Win32Error(Win32::GetLastError(), "Failed creating button.");
-			if (not Win32::SetWindowSubclass(self.m_window.get(), SubclassProc<std::remove_cvref_t<decltype(self)>>, 5, reinterpret_cast<Win32::DWORD_PTR>(&self)))
+			if (not Win32::SetWindowSubclass(self.m_window.get(), SubclassProc<std::remove_cvref_t<decltype(self)>>, self.GetSubclassId(), reinterpret_cast<Win32::DWORD_PTR>(&self)))
 				throw Error::Win32Error(Win32::GetLastError(), "Failed creating button.");
 
 			self.Init();
@@ -65,7 +66,7 @@ export namespace UI
 			return self.Process(GenericWin32Message{ .Hwnd = hwnd, .uMsg = msg, .wParam = wParam, .lParam = lParam });
 		}
 
-		auto Process(this auto&& self, auto&& msg) -> Win32::LRESULT
+		auto Process(this Control& self, auto&& msg) -> Win32::LRESULT
 		{
 			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
 		}
@@ -127,13 +128,16 @@ export namespace UI
 	template<unsigned VValue, unsigned VId, int VX, int VY, int VWidth, int VHeight>
 	struct NumberButton : Button
 	{
-		using Control::HandleMessage;
+		using Control::Process;
 
 		NumberButton() : Button(GetDefaultProperties()) {}
 
-		auto HandleMessage(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp>)
+		auto GetSubclassId(this auto&) noexcept { return VId; }
+
+		auto Process(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp> msg) -> Win32::LRESULT
 		{
-			return 0;
+			Log::Info("Pressed: {}.", VValue);
+			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
 		}
 
 		auto GetDefaultProperties(this auto&& self) -> ControlProperties
@@ -154,8 +158,11 @@ export namespace UI
 	template<String::FixedString VText, unsigned VId, int VX, int VY, int VWidth, int VHeight>
 	struct OperationButton : Button
 	{
-		using Control::HandleMessage;
+		using Control::Process;
+
 		OperationButton() : Button(GetDefaultProperties()) {}
+		
+		auto GetSubclassId(this auto&) noexcept { return VId; }
 
 		auto GetDefaultProperties(this auto&& self) -> ControlProperties
 		{
