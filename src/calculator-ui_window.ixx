@@ -190,14 +190,14 @@ export namespace UI
 		{
 			self.SetFont(UI::SystemFont.Get());
 			// Create child windows and set their font.
-			[]<typename...TArgs>(auto& self, std::tuple<TArgs...>& tuple)
+			[]<typename...TArgs>(Win32::HWND parent, std::tuple<TArgs...>& tuple)
 			{
-				([](Win32::HWND parent, auto& control)
+				([parent, &control = std::get<TArgs>(tuple)]
 				{
 					control.Create(parent);
 					control.SetFont(UI::SystemFont.Get());
-				}(self.m_window.get(), std::get<TArgs>(tuple)), ...);
-			}(self, self.m_buttons);
+				}(), ...);
+			}(self.m_window.get(), self.m_buttons);
 		}
 
 	protected:
