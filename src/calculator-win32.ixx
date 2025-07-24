@@ -58,6 +58,7 @@ export namespace Win32
 		::INITCOMMONCONTROLSEX,
 		::NONCLIENTMETRICS,
 		::HFONT,
+		::SetFocus,
 		::MessageBoxA,
 		::MessageBoxW,
 		::DefSubclassProc,
@@ -79,6 +80,7 @@ export namespace Win32
 		::WaitForMultipleObjectsEx,
 		::RegisterClassW,
 		::RegisterClassExW,
+		::SetActiveWindow,
 		::ShowWindow,
 		::ShowWindowAsync,
 		::GetModuleHandleW,
@@ -112,7 +114,10 @@ export namespace Win32
 		::CreatePrivateObjectSecurity,
 		::CreateFontIndirectW,
 		::SystemParametersInfoW,
-		::SendMessageW
+		::SendMessageW,
+		::SendMessageA,
+		::PostMessageA,
+		::PostMessageW
 		;
 
 	constexpr auto Gwlp_UserData = GWLP_USERDATA;
@@ -175,6 +180,7 @@ export namespace Win32
 			Close = WM_CLOSE,
 			Destroy = WM_DESTROY,
 			Size = WM_SIZE,
+			LeftButtonDown = WM_LBUTTONDOWN,
 			LeftButtonUp = WM_LBUTTONUP,
 			NonClientCreate = WM_NCCREATE,
 			Paint = WM_PAINT,
@@ -184,7 +190,39 @@ export namespace Win32
 			CtlColorBtn = WM_CTLCOLORBTN,
 			Notify = WM_NOTIFY,
 			CustomDraw = NM_CUSTOMDRAW,
-			SetFont = WM_SETFONT
+			SetFont = WM_SETFONT,
+			ButtonClick = BM_CLICK
+		};
+	}
+
+	namespace MouseKeys
+	{
+		enum
+		{
+			LeftButton = MK_LBUTTON
+		};
+	}
+
+	namespace VirtualKeyCodes
+	{
+		enum
+		{
+			Numpad0 = VK_NUMPAD0,
+			Numpad1 = VK_NUMPAD1,
+			Numpad2 = VK_NUMPAD2,
+			Numpad3 = VK_NUMPAD3,
+			Numpad4 = VK_NUMPAD4,
+			Numpad5 = VK_NUMPAD5,
+			Numpad6 = VK_NUMPAD6,
+			Numpad7 = VK_NUMPAD7,
+			Numpad8 = VK_NUMPAD8,
+			Numpad9 = VK_NUMPAD9,
+			Multiply = VK_MULTIPLY,
+			Add = VK_ADD,
+			Separator = VK_SEPARATOR,
+			Subtract = VK_SUBTRACT,
+			Decimal = VK_DECIMAL,
+			Divide = VK_DIVIDE
 		};
 	}
 

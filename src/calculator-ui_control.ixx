@@ -61,8 +61,12 @@ export namespace UI
 			Win32::DWORD_PTR dwRefData
 		) -> Win32::LRESULT
 		{
+			Log::Info("Control {:X} {:X}", msg, wParam);
+
 			if (msg == Win32::Messages::LeftButtonUp)
 				return self.Process(Win32Message<Win32::Messages::LeftButtonUp>{ hwnd, wParam, lParam });
+			if (msg == Win32::Messages::ButtonClick)
+				return self.Process(Win32Message<Win32::Messages::ButtonClick>{ hwnd, wParam, lParam });
 			return self.Process(GenericWin32Message{ .Hwnd = hwnd, .uMsg = msg, .wParam = wParam, .lParam = lParam });
 		}
 
@@ -93,6 +97,8 @@ export namespace UI
 
 	struct Button : Control
 	{
+		using Control::Process;
+
 		Button() : Control(GetDefaultProperties()) {}
 
 		Button(ControlProperties properties)
@@ -135,6 +141,12 @@ export namespace UI
 		auto GetSubclassId(this auto&) noexcept { return VId; }
 
 		auto Process(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp> msg) -> Win32::LRESULT
+		{
+			Log::Info("Pressed: {}.", VValue);
+			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
+		}
+
+		auto Process(this auto&& self, Win32Message<Win32::Messages::ButtonClick> msg) -> Win32::LRESULT
 		{
 			Log::Info("Pressed: {}.", VValue);
 			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);

@@ -3,6 +3,7 @@ import std;
 import :win32;
 import :error;
 import :raii;
+import :log;
 import :ui_common;
 import :ui_control;
 import :ui_font;
@@ -127,6 +128,8 @@ export namespace UI
 				return self.Process(Win32Message<Win32::Messages::Destroy>{ hwnd, wParam, lParam });
 			if (uMsg == Win32::Messages::Paint)
 				return self.Process(Win32Message<Win32::Messages::Paint>{ hwnd, wParam, lParam });
+			if (uMsg == Win32::Messages::KeyUp)
+				return self.Process(Win32Message<Win32::Messages::KeyUp>{ hwnd, wParam, lParam });
 			return self.Process(GenericWin32Message{ hwnd, uMsg, wParam, lParam });
 		}
 
@@ -147,8 +150,17 @@ export namespace UI
 	{
 		using Window::Process;
 
-		auto Process(Win32Message<Win32::Messages::Paint> message) -> Win32::LRESULT
+		auto Process(this auto& self, Win32Message<Win32::Messages::Paint> message) -> Win32::LRESULT
 		{
+			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
+		}
+
+		auto Process(this auto& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
+		{
+			Win32::SendMessageW(std::get<0>(self.m_buttons).GetHandle(), Win32::Messages::ButtonClick, 0, 0);
+			// Focus needs to be set back to the window, because it goes to the button
+			Win32::SetFocus(self.GetHandle());
+
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
 		}
 
