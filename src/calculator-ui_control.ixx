@@ -61,8 +61,7 @@ export namespace UI
 			Win32::DWORD_PTR dwRefData
 		) -> Win32::LRESULT
 		{
-			Log::Info("Control {:X} {:X}", msg, wParam);
-
+			//Log::Info("Control {:X} {:X}", msg, wParam);
 			if (msg == Win32::Messages::LeftButtonUp)
 				return self.Process(Win32Message<Win32::Messages::LeftButtonUp>{ hwnd, wParam, lParam });
 			if (msg == Win32::Messages::ButtonClick)
