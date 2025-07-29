@@ -5,6 +5,19 @@ import :raii;
 
 export namespace UI
 {
+	struct CreateWindowArgs
+	{
+		Win32::PCWSTR WindowName = nullptr;
+		Win32::DWORD Style = 0;
+		Win32::DWORD ExtendedStyle = 0;
+		int X = Win32::CwUseDefault;
+		int Y = Win32::CwUseDefault;
+		int Width = Win32::CwUseDefault;
+		int Height = Win32::CwUseDefault;
+		Win32::HWND hWndParent = 0;
+		Win32::HMENU Menu = 0;
+	};
+
 	//
 	// Strongly-typed message.
 	template<Win32::DWORD VMsg>
@@ -44,8 +57,15 @@ export namespace UI
 
 		auto Hide(this auto& self) noexcept -> decltype(self)
 		{
-			if (self.m_hwnd)
+			if (self.m_window)
 				Win32::ShowWindow(self.m_window.get(), Win32::ShowWindowOptions::Hide);
+			return self;
+		}
+
+		auto TakeFocus(this auto& self) -> decltype(self)
+		{
+			if (self.m_window)
+				Win32::SetFocus(self.m_window.get());
 			return self;
 		}
 	protected:

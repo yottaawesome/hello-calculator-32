@@ -6,7 +6,7 @@ export import :win32;
 export import :error;
 export import :raii;
 export import :string;
-export import :ui_window;
+export import :ui_mainwindow;
 export import :ui_control;
 export import :ui_common;
 export import :ui_font;
@@ -34,7 +34,6 @@ try
 	};
 	Win32::InitCommonControlsEx(&icc);
 
-	// register class
 	UI::MainWindow app;
 	app.Register().Create().Show().MainLoop();
 

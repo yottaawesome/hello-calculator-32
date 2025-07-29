@@ -185,6 +185,7 @@
     <ClCompile Include="calculator-raii.ixx" />
     <ClCompile Include="calculator-string.ixx" />
     <ClCompile Include="calculator-ui_font.ixx" />
+    <ClCompile Include="calculator-ui_mainwindow.ixx" />
     <ClCompile Include="calculator-ui_window.ixx" />
     <ClCompile Include="calculator-ui_common.ixx" />
     <ClCompile Include="calculator-ui_control.ixx" />

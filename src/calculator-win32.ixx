@@ -257,7 +257,9 @@ export namespace Win32
 	{
 		enum
 		{
-			WsOverlappedWindow = WS_OVERLAPPEDWINDOW
+			WsOverlappedWindow = WS_OVERLAPPEDWINDOW,
+
+			WindowEdge = WS_EX_WINDOWEDGE
 		};
 	}
 

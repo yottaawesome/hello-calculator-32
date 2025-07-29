@@ -90,6 +90,8 @@ export namespace UI
 				: Win32::DefSubclassProc(hwnd, msg, wParam, lParam);
 		}
 
+		auto GetId(this const auto& self) noexcept -> unsigned { return m_properties.Id; }
+
 	protected:
 		ControlProperties m_properties;
 	};
@@ -122,6 +124,7 @@ export namespace UI
 				.Class = L"Button",
 				.Text = L"Hello",
 				.Styles = Win32::Styles::PushButton | Win32::Styles::Child | Win32::Styles::Visible,
+				.ExtendedStyles = Win32::WindowStyles::WindowEdge,
 				.X = 10,
 				.Y = 10,
 				.Width = 100,
