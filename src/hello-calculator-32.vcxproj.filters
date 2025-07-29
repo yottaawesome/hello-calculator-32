@@ -18,34 +18,34 @@
     <ClCompile Include="calculator.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calculator-win32.ixx">
+    <ClCompile Include="Win32\calculator-win32.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calculator-error.ixx">
+    <ClCompile Include="Error\calculator-error.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calculator-raii.ixx">
+    <ClCompile Include="Raii\calculator-raii.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calculator-ui_window.ixx">
+    <ClCompile Include="UI\calculator-ui_window.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calculator-log.ixx">
+    <ClCompile Include="Log\calculator-log.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calculator-ui_common.ixx">
+    <ClCompile Include="UI\calculator-ui_common.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calculator-ui_control.ixx">
+    <ClCompile Include="UI\calculator-ui_control.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calculator-string.ixx">
+    <ClCompile Include="String\calculator-string.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calculator-ui_font.ixx">
+    <ClCompile Include="UI\calculator-ui_font.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calculator-ui_mainwindow.ixx">
+    <ClCompile Include="UI\calculator-ui_mainwindow.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
