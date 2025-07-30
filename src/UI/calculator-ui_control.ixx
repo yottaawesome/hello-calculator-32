@@ -22,6 +22,27 @@ export namespace UI
 		int Height = 0;
 	};
 
+	struct TextableCapability
+	{
+		auto GetText(this auto& self) -> std::wstring
+		{
+			auto handle = self.GetHandle();
+			if (not handle)
+				return {};
+			std::wstring buffer{ Win32::GetWindowTextLengthW(handle), '\0' };
+			Win32::GetWindowTextW(self.GetHandle(), buffer.data(), static_cast<int>(buffer.size()));
+		}
+		auto SetText(this auto& self, std::wstring_view text)
+		{
+			if (auto handle = self.GetHandle())
+				Win32::SetWindowTextW(handle, text.data());
+		}
+		auto AppendText(this auto& self, std::wstring_view text) 
+		{
+			self.SetText(std::format(L"{}{}"), self.GetText(), text);
+		}
+	};
+
 	struct Control : SimpleWindow
 	{
 		Control() = default;
@@ -29,6 +50,10 @@ export namespace UI
 
 		auto Create(this auto&& self, Win32::HWND parent) -> void
 		{
+			static_assert(
+				requires { { self.GetClass().data() } -> std::same_as<const wchar_t*>; }, 
+				"This type needs a GetClass() member that returns a wstring or wstring_view!");
+			
 			Win32::HWND window = Win32::CreateWindowExW(
 				self.m_properties.ExtendedStyles,
 				self.GetClass().data(),
@@ -48,7 +73,8 @@ export namespace UI
 			if (not Win32::SetWindowSubclass(self.m_window.get(), SubclassProc<std::remove_cvref_t<decltype(self)>>, self.GetSubclassId(), reinterpret_cast<Win32::DWORD_PTR>(&self)))
 				throw Error::Win32Error(Win32::GetLastError(), "Failed creating button.");
 
-			self.Init();
+			if constexpr (requires { self.Init(); })
+				self.Init();
 		}
 
 		auto HandleMessage(
@@ -104,8 +130,7 @@ export namespace UI
 
 		Button(ControlProperties properties)
 			: Control(properties)
-		{
-		}
+		{ }
 
 		void Init(this auto&& self)
 		{
@@ -134,7 +159,7 @@ export namespace UI
 	};
 
 	template<unsigned VValue, unsigned VId, int VX, int VY, int VWidth, int VHeight>
-	struct NumberButton : Button
+	struct NumberButton : Button, TextableCapability
 	{
 		using Control::Process;
 
@@ -191,5 +216,33 @@ export namespace UI
 				.Height = VHeight
 			};
 		};
+	};
+
+	template<unsigned VId, int VX, int VY, int VWidth, int VHeight>
+	struct Output : Control, TextableCapability
+	{
+		using Control::Process;
+
+		Output() : Control(GetDefaultProperties()) {}
+
+		auto GetSubclassId(this auto&) noexcept { return VId; }
+
+		auto GetDefaultProperties(this auto&& self) -> ControlProperties
+		{
+			return {
+				.Id = VId,
+				.Text = L"Hello",
+				.Styles = Win32::Styles::Child | Win32::Styles::Visible | Win32::Styles::Border,
+				.X = VX,
+				.Y = VY,
+				.Width = VWidth,
+				.Height = VHeight
+			};
+		};
+
+		auto GetClass(this auto&&) noexcept -> std::wstring_view
+		{
+			return L"Static";
+		}
 	};
 }

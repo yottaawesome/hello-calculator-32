@@ -19,7 +19,7 @@ export namespace UI
 
 		auto Process(this auto& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
 		{
-			Win32::SendMessageW(std::get<0>(self.m_buttons).GetHandle(), Win32::Messages::ButtonClick, 0, 0);
+			Win32::SendMessageW(std::get<1>(self.m_buttons).GetHandle(), Win32::Messages::ButtonClick, 0, 0);
 			// Focus needs to be set back to the window, because it goes to the button
 			self.TakeFocus();
 
@@ -70,24 +70,33 @@ export namespace UI
 		static constexpr auto ButtonHeight = 50;
 		static constexpr auto StartX = 50;
 		static constexpr auto StartY = 50;
+		static constexpr auto RowWidth = ButtonWidth*4;
 
 		using ButtonGroup = std::tuple<
-			NumberButton<1, 101, StartX + ButtonWidth * 0, StartY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
-			NumberButton<2, 102, StartX + ButtonWidth * 1, StartY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
-			NumberButton<3, 103, StartX + ButtonWidth * 2, StartY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
-			OperationButton<L"+", 111, StartX + ButtonWidth * 3, StartY + ButtonHeight * 0, ButtonWidth, ButtonHeight>,
-			NumberButton<4, 104, StartX + ButtonWidth * 0, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
-			NumberButton<5, 105, StartX + ButtonWidth * 1, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
-			NumberButton<6, 106, StartX + ButtonWidth * 2, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
-			OperationButton<L"-", 112, StartX + ButtonWidth * 3, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
-			NumberButton<7, 107, StartX + ButtonWidth * 0, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
-			NumberButton<8, 108, StartX + ButtonWidth * 1, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
-			NumberButton<9, 109, StartX + ButtonWidth * 2, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
-			OperationButton<L"x", 113, StartX + ButtonWidth * 3, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
-			NumberButton<0, 100, StartX + ButtonWidth * 0, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
-			OperationButton<L".", 114, StartX + ButtonWidth * 1, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
-			OperationButton<L"=", 115, StartX + ButtonWidth * 2, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
-			OperationButton<L"%", 116, StartX + ButtonWidth * 3, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>
+			// 1st row
+			Output<1, StartX + ButtonWidth * 0, StartY + ButtonHeight * 0, RowWidth, ButtonHeight>,
+			// 2nd row
+			NumberButton<1, 101, StartX + ButtonWidth * 0, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
+			NumberButton<2, 102, StartX + ButtonWidth * 1, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
+			NumberButton<3, 103, StartX + ButtonWidth * 2, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
+			OperationButton<L"+", 111, StartX + ButtonWidth * 3, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
+			// 3rd row
+			NumberButton<4, 104, StartX + ButtonWidth * 0, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
+			NumberButton<5, 105, StartX + ButtonWidth * 1, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
+			NumberButton<6, 106, StartX + ButtonWidth * 2, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
+			OperationButton<L"-", 112, StartX + ButtonWidth * 3, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
+			// 4th row
+			NumberButton<7, 107, StartX + ButtonWidth * 0, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
+			NumberButton<8, 108, StartX + ButtonWidth * 1, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
+			NumberButton<9, 109, StartX + ButtonWidth * 2, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
+			OperationButton<L"x", 113, StartX + ButtonWidth * 3, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
+			// 5th row
+			NumberButton<0, 100, StartX + ButtonWidth * 0, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight>,
+			OperationButton<L".", 114, StartX + ButtonWidth * 1, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight>,
+			OperationButton<L"CE", 115, StartX + ButtonWidth * 2, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight>,
+			OperationButton<L"%", 116, StartX + ButtonWidth * 3, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight>,
+			// 6th row
+			OperationButton<L"=", 117, StartX + ButtonWidth * 0, StartY + ButtonHeight * 5, RowWidth, ButtonHeight>
 		>;
 
 		ButtonGroup m_buttons{};
