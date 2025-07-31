@@ -78,16 +78,14 @@ export namespace UI
 
 		auto RunOn(this auto& self, auto&&...invocable)
 		{
-			using M = Overload<std::remove_cvref_t<decltype(invocable)>...>;
 			[]<typename...TArgs>(std::tuple<TArgs...>&tuple, auto&& overload)
 			{
 				([&overload, &tuple]<typename T = TArgs>
 				{
-					// Doesn't work, compiler bug?
-					//if constexpr (std::invocable<M, T>)
-						//std::invoke(overload, std::get<T>(tuple));
-					if constexpr (requires { std::invoke(overload, std::get<T>(tuple)); })
+					if constexpr (std::invocable<decltype(overload), T&>)
 						std::invoke(overload, std::get<T>(tuple));
+					//if constexpr (requires { std::invoke(overload, std::get<T>(tuple)); })
+						//std::invoke(overload, std::get<T>(tuple));
 				}(), ...);
 			}(self.Buttons, Overload{ std::forward<decltype(invocable)>(invocable)... });
 		}
