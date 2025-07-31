@@ -68,27 +68,28 @@ export namespace UI
 			ButtonEquals
 		>;
 
-		auto Get(unsigned id, auto&&...invocable) -> auto
+		auto Get(this auto& self, unsigned id, auto&&...invocable) -> auto
 		{
 			[id]<typename...TArgs>(std::tuple<TArgs...>& tuple, auto&&...invocable)
 			{
 				((std::get<TArgs>(tuple).GetId() == id ? (Overload{ invocable... }(std::get<TArgs>(tuple)), true) : false) or ...);
-			}(Buttons, std::forward<decltype(invocable)>(invocable)...);
+			}(self.Buttons, std::forward<decltype(invocable)>(invocable)...);
 		}
 
-		auto RunOn(auto&&...invocable)
+		auto RunOn(this auto& self, auto&&...invocable)
 		{
+			using M = Overload<std::remove_cvref_t<decltype(invocable)>...>;
 			[]<typename...TArgs>(std::tuple<TArgs...>&tuple, auto&& overload)
 			{
 				([&overload, &tuple]<typename T = TArgs>
 				{
 					// Doesn't work, compiler bug?
-					//if constexpr (std::invocable<std::remove_cvref_t<decltype(overload)>, T>)
+					//if constexpr (std::invocable<M, T>)
 						//std::invoke(overload, std::get<T>(tuple));
 					if constexpr (requires { std::invoke(overload, std::get<T>(tuple)); })
 						std::invoke(overload, std::get<T>(tuple));
 				}(), ...);
-			}(Buttons, Overload{ std::forward<decltype(invocable)>(invocable)... });
+			}(self.Buttons, Overload{ std::forward<decltype(invocable)>(invocable)... });
 		}
 
 		TupleType Buttons;
