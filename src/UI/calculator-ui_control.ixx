@@ -114,7 +114,7 @@ export namespace UI
 				: Win32::DefSubclassProc(hwnd, msg, wParam, lParam);
 		}
 
-		auto GetId(this const auto& self) noexcept -> unsigned { return m_properties.Id; }
+		auto GetId(this const auto& self) noexcept -> unsigned { return self.m_properties.Id; }
 
 	protected:
 		ControlProperties m_properties;
@@ -196,12 +196,19 @@ export namespace UI
 
 		NumberButton() : Button(GetDefaultProperties()) {}
 
+		NumberButton(std::move_only_function<auto()->void> f) 
+			: Button(GetDefaultProperties()),
+			Clicked(std::move(f))
+		{}
+
 		auto GetSubclassId(this auto&) noexcept { return VId; }
 
 		void OnClick(this auto& self) 
 		{
 			Log::Info("HA");
 		}
+
+		std::function<auto()->void> Clicked = [] {};
 
 		auto GetDefaultProperties(this auto&& self) -> ControlProperties
 		{

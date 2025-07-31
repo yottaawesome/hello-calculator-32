@@ -8,6 +8,92 @@ import :ui_font;
 
 export namespace UI
 {
+	constexpr auto ButtonWidth = 100;
+	constexpr auto ButtonHeight = 50;
+	constexpr auto StartX = 50;
+	constexpr auto StartY = 50;
+	constexpr auto RowWidth = ButtonWidth * 4;
+
+	// 1st row
+	using OutputWindow = Output<1, StartX + ButtonWidth * 0, StartY + ButtonHeight * 0, RowWidth, ButtonHeight>;
+	// 2nd row
+	using Button1 = NumberButton<1, 101, StartX + ButtonWidth * 0, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>;
+	using Button2 = NumberButton<2, 102, StartX + ButtonWidth * 1, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>;
+	using Button3 = NumberButton<3, 103, StartX + ButtonWidth * 2, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>;
+	using ButtonPlus = OperationButton<L"+", 111, StartX + ButtonWidth * 3, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>;
+	// 3rd row
+	using Button4 = NumberButton<4, 104, StartX + ButtonWidth * 0, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>;
+	using Button5 = NumberButton<5, 105, StartX + ButtonWidth * 1, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>;
+	using Button6 = NumberButton<6, 106, StartX + ButtonWidth * 2, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>;
+	using ButtonMinus = OperationButton<L"-", 112, StartX + ButtonWidth * 3, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>;
+	// 4th row
+	using Button7 = NumberButton<7, 107, StartX + ButtonWidth * 0, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>;
+	using Button8 = NumberButton<8, 108, StartX + ButtonWidth * 1, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>;
+	using Button9 = NumberButton<9, 109, StartX + ButtonWidth * 2, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>;
+	using ButtonTimes = OperationButton<L"x", 113, StartX + ButtonWidth * 3, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>;
+	// 5th row
+	using Button0 = NumberButton<0, 100, StartX + ButtonWidth * 0, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight>;
+	using ButtonDecimal = OperationButton<L".", 114, StartX + ButtonWidth * 1, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight>;
+	using ButtonClear = OperationButton<L"CE", 115, StartX + ButtonWidth * 2, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight>;
+	using ButtonDivide = OperationButton<L"%", 116, StartX + ButtonWidth * 3, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight>;
+	// 6th row
+	using ButtonEquals = OperationButton<L"=", 117, StartX + ButtonWidth * 0, StartY + ButtonHeight * 5, RowWidth, ButtonHeight>;
+
+	template<typename...Ts>
+	struct Overload : Ts...
+	{
+		using Ts::operator()...;
+	};
+
+	struct ButtonGroup
+	{
+		using TupleType = std::tuple<
+			OutputWindow,
+			Button1,
+			Button2,
+			Button3,
+			ButtonPlus,
+			Button4,
+			Button5,
+			Button6,
+			ButtonMinus,
+			Button7,
+			Button8,
+			Button9,
+			ButtonTimes,
+			Button0,
+			ButtonDecimal,
+			ButtonClear,
+			ButtonDivide,
+			ButtonEquals
+		>;
+
+		auto Get(unsigned id, auto&&...invocable) -> auto
+		{
+			[id]<typename...TArgs>(std::tuple<TArgs...>& tuple, auto&&...invocable)
+			{
+				((std::get<TArgs>(tuple).GetId() == id ? (Overload{ invocable... }(std::get<TArgs>(tuple)), true) : false) or ...);
+			}(Buttons, std::forward<decltype(invocable)>(invocable)...);
+		}
+
+		auto RunOn(auto&&...invocable)
+		{
+			[]<typename...TArgs>(std::tuple<TArgs...>&tuple, auto&& overload)
+			{
+				([&overload, &tuple]<typename T = TArgs>
+				{
+					// Doesn't work, compiler bug?
+					//if constexpr (std::invocable<std::remove_cvref_t<decltype(overload)>, T>)
+						//std::invoke(overload, std::get<T>(tuple));
+					if constexpr (requires { std::invoke(overload, std::get<T>(tuple)); })
+						std::invoke(overload, std::get<T>(tuple));
+				}(), ...);
+			}(Buttons, Overload{ std::forward<decltype(invocable)>(invocable)... });
+		}
+
+		TupleType Buttons;
+	};
+
 	struct MainWindow : Window
 	{
 		using Window::Process;
@@ -17,15 +103,23 @@ export namespace UI
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
 		}
 
-		// Doesn't work since we subclassed the windows.
 		auto Process(this auto& self, Win32Message<Win32::Messages::Command> message) -> Win32::LRESULT
 		{
+			self.m_buttons.Get(
+				Win32::LoWord(message.wParam),
+				[&self](Button0& control) { Log::Info("Zero was pressed!"); },
+				[](auto& control) { }
+			);
+
+			self.m_buttons.RunOn([](Button0&) {Log::Info("Got it"); });
+
+			Log::Info("{}", Win32::LoWord(message.wParam));
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
 		}
 
 		auto Process(this auto& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
 		{
-			Win32::SendMessageW(std::get<1>(self.m_buttons).GetHandle(), Win32::Messages::ButtonClick, 0, 0);
+			Win32::SendMessageW(std::get<1>(self.m_buttons.Buttons).GetHandle(), Win32::Messages::ButtonClick, 0, 0);
 			// Focus needs to be set back to the window, because it goes to the button
 			self.TakeFocus();
 
@@ -68,43 +162,10 @@ export namespace UI
 					control.Create(parent);
 					control.SetFont(UI::SystemFont.Get());
 				}(), ...);
-			}(self.m_window.get(), self.m_buttons);
+			}(self.m_window.get(), self.m_buttons.Buttons);
 		}
 
 	protected:
-		static constexpr auto ButtonWidth = 100;
-		static constexpr auto ButtonHeight = 50;
-		static constexpr auto StartX = 50;
-		static constexpr auto StartY = 50;
-		static constexpr auto RowWidth = ButtonWidth*4;
-
-		using ButtonGroup = std::tuple<
-			// 1st row
-			Output<1, StartX + ButtonWidth * 0, StartY + ButtonHeight * 0, RowWidth, ButtonHeight>,
-			// 2nd row
-			NumberButton<1, 101, StartX + ButtonWidth * 0, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
-			NumberButton<2, 102, StartX + ButtonWidth * 1, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
-			NumberButton<3, 103, StartX + ButtonWidth * 2, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
-			OperationButton<L"+", 111, StartX + ButtonWidth * 3, StartY + ButtonHeight * 1, ButtonWidth, ButtonHeight>,
-			// 3rd row
-			NumberButton<4, 104, StartX + ButtonWidth * 0, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
-			NumberButton<5, 105, StartX + ButtonWidth * 1, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
-			NumberButton<6, 106, StartX + ButtonWidth * 2, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
-			OperationButton<L"-", 112, StartX + ButtonWidth * 3, StartY + ButtonHeight * 2, ButtonWidth, ButtonHeight>,
-			// 4th row
-			NumberButton<7, 107, StartX + ButtonWidth * 0, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
-			NumberButton<8, 108, StartX + ButtonWidth * 1, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
-			NumberButton<9, 109, StartX + ButtonWidth * 2, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
-			OperationButton<L"x", 113, StartX + ButtonWidth * 3, StartY + ButtonHeight * 3, ButtonWidth, ButtonHeight>,
-			// 5th row
-			NumberButton<0, 100, StartX + ButtonWidth * 0, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight>,
-			OperationButton<L".", 114, StartX + ButtonWidth * 1, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight>,
-			OperationButton<L"CE", 115, StartX + ButtonWidth * 2, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight>,
-			OperationButton<L"%", 116, StartX + ButtonWidth * 3, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight>,
-			// 6th row
-			OperationButton<L"=", 117, StartX + ButtonWidth * 0, StartY + ButtonHeight * 5, RowWidth, ButtonHeight>
-		>;
-
 		ButtonGroup m_buttons{};
 	};
 }

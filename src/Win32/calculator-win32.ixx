@@ -295,4 +295,6 @@ export namespace Win32
 
 	constexpr auto CpUtf8 = CP_UTF8;
 	constexpr auto WcNoBestFitChars = WC_NO_BEST_FIT_CHARS;
+
+	constexpr auto LoWord(auto value) { return LOWORD(value); }
 }
