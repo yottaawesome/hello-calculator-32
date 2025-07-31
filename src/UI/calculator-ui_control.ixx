@@ -90,8 +90,6 @@ export namespace UI
 			//Log::Info("Control {:X} {:X}", msg, wParam);
 			if (msg == Win32::Messages::LeftButtonUp)
 				return self.Process(Win32Message<Win32::Messages::LeftButtonUp>{ hwnd, wParam, lParam });
-			if (msg == Win32::Messages::ButtonClick)
-				return self.Process(Win32Message<Win32::Messages::ButtonClick>{ hwnd, wParam, lParam });
 			return self.Process(GenericWin32Message{ .Hwnd = hwnd, .uMsg = msg, .wParam = wParam, .lParam = lParam });
 		}
 
@@ -122,6 +120,37 @@ export namespace UI
 		ControlProperties m_properties;
 	};
 
+	template<unsigned VId, int VX, int VY, int VWidth, int VHeight>
+	struct Output : Control, TextableCapability
+	{
+		using Control::Process;
+
+		Output() : Control(GetDefaultProperties()) {}
+
+		auto GetSubclassId(this const auto&) noexcept -> unsigned 
+		{ 
+			return VId; 
+		}
+
+		auto GetDefaultProperties(this auto&& self) -> ControlProperties
+		{
+			return {
+				.Id = VId,
+				.Text = L"Hello",
+				.Styles = Win32::Styles::Child | Win32::Styles::Visible | Win32::Styles::Border,
+				.X = VX,
+				.Y = VY,
+				.Width = VWidth,
+				.Height = VHeight
+			};
+		};
+
+		auto GetClass(this auto&&) noexcept -> std::wstring_view
+		{
+			return L"Static";
+		}
+	};
+
 	struct Button : Control
 	{
 		using Control::Process;
@@ -132,14 +161,16 @@ export namespace UI
 			: Control(properties)
 		{ }
 
-		void Init(this auto&& self)
-		{
-			//Win32::SetWindowRgn(self.m_window.get(), Win32::CreateRoundRectRgn(10, 10, 60, 110, 50, 50), true);
-		}
-
 		auto GetClass(this auto&&) noexcept -> std::wstring_view
 		{
 			return L"Button";
+		}
+
+		auto Process(this auto& self, Win32Message<Win32::Messages::LeftButtonUp> msg) -> Win32::LRESULT
+			requires requires { self.OnClick(); }
+		{
+			self.OnClick();
+			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
 		}
 
 		auto GetDefaultProperties(this auto&& self) -> ControlProperties
@@ -161,22 +192,15 @@ export namespace UI
 	template<unsigned VValue, unsigned VId, int VX, int VY, int VWidth, int VHeight>
 	struct NumberButton : Button, TextableCapability
 	{
-		using Control::Process;
+		using Button::Process;
 
 		NumberButton() : Button(GetDefaultProperties()) {}
 
 		auto GetSubclassId(this auto&) noexcept { return VId; }
 
-		auto Process(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp> msg) -> Win32::LRESULT
+		void OnClick(this auto& self) 
 		{
-			Log::Info("Pressed: {}.", VValue);
-			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
-		}
-
-		auto Process(this auto&& self, Win32Message<Win32::Messages::ButtonClick> msg) -> Win32::LRESULT
-		{
-			Log::Info("Pressed: {}.", VValue);
-			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
+			Log::Info("HA");
 		}
 
 		auto GetDefaultProperties(this auto&& self) -> ControlProperties
@@ -216,33 +240,5 @@ export namespace UI
 				.Height = VHeight
 			};
 		};
-	};
-
-	template<unsigned VId, int VX, int VY, int VWidth, int VHeight>
-	struct Output : Control, TextableCapability
-	{
-		using Control::Process;
-
-		Output() : Control(GetDefaultProperties()) {}
-
-		auto GetSubclassId(this auto&) noexcept { return VId; }
-
-		auto GetDefaultProperties(this auto&& self) -> ControlProperties
-		{
-			return {
-				.Id = VId,
-				.Text = L"Hello",
-				.Styles = Win32::Styles::Child | Win32::Styles::Visible | Win32::Styles::Border,
-				.X = VX,
-				.Y = VY,
-				.Width = VWidth,
-				.Height = VHeight
-			};
-		};
-
-		auto GetClass(this auto&&) noexcept -> std::wstring_view
-		{
-			return L"Static";
-		}
 	};
 }

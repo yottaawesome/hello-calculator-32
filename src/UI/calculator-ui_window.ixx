@@ -10,6 +10,13 @@ import :ui_font;
 
 export namespace UI
 {
+	constexpr std::array HandledMessages{
+		Win32::Messages::Destroy,
+		Win32::Messages::Paint,
+		Win32::Messages::KeyUp,
+		Win32::Messages::Command
+	};
+
 	struct Window : SimpleWindow
 	{
 		//
@@ -108,15 +115,28 @@ export namespace UI
 		//
 		// Called by WindowProc, which then dispatches the message to either the generic handler
 		// or specific handlers by subclasses.
-		auto HandleMessage(this auto&& self, Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) -> Win32::LRESULT
+		auto HandleMessage(this auto& self, Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) -> Win32::LRESULT
 		{
-			if (uMsg == Win32::Messages::Destroy)
+			return [&self, hwnd, uMsg, wParam, lParam]<size_t...Is>(std::index_sequence<Is...>)
+			{
+				Win32::LRESULT result = 0;
+				bool handled = ((
+					std::get<Is>(HandledMessages) == uMsg 
+						? (result = self.Process(Win32Message<std::get<Is>(HandledMessages)>{ hwnd, wParam, lParam }), true)
+						: false
+				) or ...);
+				return handled ? result : self.Process(GenericWin32Message{ hwnd, uMsg, wParam, lParam });
+			}(std::make_index_sequence<HandledMessages.size()>());
+
+			/*if (uMsg == Win32::Messages::Destroy)
 				return self.Process(Win32Message<Win32::Messages::Destroy>{ hwnd, wParam, lParam });
 			if (uMsg == Win32::Messages::Paint)
 				return self.Process(Win32Message<Win32::Messages::Paint>{ hwnd, wParam, lParam });
 			if (uMsg == Win32::Messages::KeyUp)
 				return self.Process(Win32Message<Win32::Messages::KeyUp>{ hwnd, wParam, lParam });
-			return self.Process(GenericWin32Message{ hwnd, uMsg, wParam, lParam });
+			if (uMsg == Win32::Messages::Command)
+				return self.Process(Win32Message<Win32::Messages::Command>{ hwnd, wParam, lParam });
+			return self.Process(GenericWin32Message{ hwnd, uMsg, wParam, lParam });*/
 		}
 
 		//

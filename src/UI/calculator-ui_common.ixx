@@ -23,10 +23,14 @@ export namespace UI
 	template<Win32::DWORD VMsg>
 	struct Win32Message
 	{
-		static constexpr Win32::UINT uMsg = VMsg;
+		static constexpr std::uint32_t uMsg = VMsg;
 		Win32::HWND Hwnd = nullptr;
 		Win32::WPARAM wParam = 0;
 		Win32::LPARAM lParam = 0;
+		auto operator==(this const auto&, std::uint32_t msg) noexcept -> bool 
+		{ 
+			return VMsg == msg; 
+		}
 	};
 
 	struct GenericWin32Message

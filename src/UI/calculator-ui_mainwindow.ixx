@@ -17,6 +17,12 @@ export namespace UI
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
 		}
 
+		// Doesn't work since we subclassed the windows.
+		auto Process(this auto& self, Win32Message<Win32::Messages::Command> message) -> Win32::LRESULT
+		{
+			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
+		}
+
 		auto Process(this auto& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
 		{
 			Win32::SendMessageW(std::get<1>(self.m_buttons).GetHandle(), Win32::Messages::ButtonClick, 0, 0);

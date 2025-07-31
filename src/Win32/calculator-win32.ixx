@@ -1,9 +1,6 @@
 module;
 
 #define WIN32_LEAN_AND_MEAN
-//#define WINVER 0x0A00
-//#define _WIN32_WINNT 0x0A00
-
 #include <Windows.h>
 #include <CommCtrl.h>
 #include <wingdi.h>
@@ -11,7 +8,7 @@ module;
 export module calculator:win32;
 import std;
 
-export namespace Win32
+namespace Win32
 {
 	template<auto VValue>
 	struct Win32Constant
@@ -28,7 +25,10 @@ export namespace Win32
 			return VValue();
 		}
 	};
-	
+}
+
+export namespace Win32
+{
 	using
 		::BOOL,
 		::HMENU,
@@ -197,7 +197,8 @@ export namespace Win32
 			Notify = WM_NOTIFY,
 			CustomDraw = NM_CUSTOMDRAW,
 			SetFont = WM_SETFONT,
-			ButtonClick = BM_CLICK
+			ButtonClick = BM_CLICK,
+			ButtonClicked = BN_CLICKED
 		};
 	}
 
@@ -264,26 +265,29 @@ export namespace Win32
 		enum
 		{
 			WsOverlappedWindow = WS_OVERLAPPEDWINDOW,
-
 			WindowEdge = WS_EX_WINDOWEDGE
 		};
 	}
 
 	namespace Styles
 	{
-		constexpr auto Child = WS_CHILD;
-		constexpr auto ClipSiblings = WS_CLIPSIBLINGS;
-		constexpr auto Visible = WS_VISIBLE;
-		constexpr auto OverlappedWindow = WS_OVERLAPPEDWINDOW;
-		constexpr auto HScroll = WS_HSCROLL;
-		constexpr auto VScroll = WS_VSCROLL;
-		constexpr auto Border = WS_BORDER;
-		constexpr auto DefPushButton = BS_DEFPUSHBUTTON;
-		constexpr auto PushButton = BS_PUSHBUTTON;
-		constexpr auto VRedraw = CS_VREDRAW;
-		constexpr auto HRedraw = CS_HREDRAW;
-		constexpr auto AutoCheckBox = BS_AUTOCHECKBOX;
-		constexpr auto PushLike = BS_PUSHLIKE;
+		enum
+		{
+			Child = WS_CHILD,
+			ClipSiblings = WS_CLIPSIBLINGS,
+			Visible = WS_VISIBLE,
+			OverlappedWindow = WS_OVERLAPPEDWINDOW,
+			HScroll = WS_HSCROLL,
+			VScroll = WS_VSCROLL,
+			Border = WS_BORDER,
+			DefPushButton = BS_DEFPUSHBUTTON,
+			PushButton = BS_PUSHBUTTON,
+			VRedraw = CS_VREDRAW,
+			HRedraw = CS_HREDRAW,
+			AutoCheckBox = BS_AUTOCHECKBOX,
+			PushLike = BS_PUSHLIKE
+		};
+		
 	}
 
 	constexpr Win32Constant<IDI_APPLICATION> IdiApplication;
