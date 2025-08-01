@@ -27,7 +27,7 @@
     <ClCompile Include="Raii\calculator-raii.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI\calculator-ui_window.ixx">
+    <ClCompile Include="UI\calculator-ui_toplevelwindow.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Log\calculator-log.ixx">
@@ -45,7 +45,10 @@
     <ClCompile Include="UI\calculator-ui_font.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI\calculator-ui_mainwindow.ixx">
+    <ClCompile Include="UI\calculator-ui_calculatormainwindow.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\calculator-ui_capability.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

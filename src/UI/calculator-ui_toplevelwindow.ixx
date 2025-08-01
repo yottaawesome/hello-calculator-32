@@ -1,4 +1,4 @@
-export module calculator:ui_window;
+export module calculator:ui_toplevelwindow;
 import std;
 import :win32;
 import :error;
@@ -7,32 +7,26 @@ import :log;
 import :ui_common;
 import :ui_control;
 import :ui_font;
+import :ui_capability;
 
 export namespace UI
 {
-	constexpr std::array HandledMessages{
-		Win32::Messages::Destroy,
-		Win32::Messages::Paint,
-		Win32::Messages::KeyUp,
-		Win32::Messages::Command
-	};
-
-	struct Window : SimpleWindow
+	struct TopLevelWindow : Window, Textable
 	{
 		//
 		// Registers the window class.
-		auto Register(this auto&& self) -> decltype(self)
+		auto Register(this auto&& self) -> decltype(auto)
 		{
 			auto wndClass = self.GetClass();
 			wndClass.lpfnWndProc = WindowProc<std::remove_cvref_t<decltype(self)>>;
 			if (Win32::ATOM atom = Win32::RegisterClassExW(&wndClass); atom)
-				return self;
+				return std::forward<decltype(self)>(self);
 			throw Error::Win32Error{};
 		}
 
 		//
 		// Creates the window.
-		auto Create(this auto& self) -> decltype(self)
+		auto Create(this auto&& self) -> decltype(auto)
 		{
 			CreateWindowArgs args = self.CreateArgs();
 			Win32::HWND hwnd = Win32::CreateWindowExW(
@@ -51,7 +45,7 @@ export namespace UI
 			);
 			self.m_window = Raii::HwndUniquePtr(hwnd);
 			self.Init();
-			return self;
+			return std::forward<decltype(self)>(self);
 		}
 
 		//
@@ -87,6 +81,13 @@ export namespace UI
 		}
 
 	protected:
+		static constexpr std::array HandledMessages{
+			Win32::Messages::Destroy,
+			Win32::Messages::Paint,
+			Win32::Messages::KeyUp,
+			Win32::Messages::Command
+		};
+
 		//
 		// The main Window proc.
 		template<typename TWindow>
@@ -115,33 +116,29 @@ export namespace UI
 		//
 		// Called by WindowProc, which then dispatches the message to either the generic handler
 		// or specific handlers by subclasses.
-		auto HandleMessage(this auto& self, Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) -> Win32::LRESULT
+		auto HandleMessage(
+			this auto&& self, 
+			Win32::HWND hwnd, 
+			unsigned msgType, 
+			Win32::WPARAM wParam, 
+			Win32::LPARAM lParam
+		) -> Win32::LRESULT
 		{
-			return [&self, hwnd, uMsg, wParam, lParam]<size_t...Is>(std::index_sequence<Is...>)
+			return [&self, hwnd, msgType, wParam, lParam]<size_t...Is>(std::index_sequence<Is...>)
 			{
 				Win32::LRESULT result = 0;
 				bool handled = ((
-					std::get<Is>(HandledMessages) == uMsg 
+					std::get<Is>(HandledMessages) == msgType 
 						? (result = self.Process(Win32Message<std::get<Is>(HandledMessages)>{ hwnd, wParam, lParam }), true)
 						: false
 				) or ...);
-				return handled ? result : self.Process(GenericWin32Message{ hwnd, uMsg, wParam, lParam });
+				return handled ? result : self.Process(GenericWin32Message{ hwnd, msgType, wParam, lParam });
 			}(std::make_index_sequence<HandledMessages.size()>());
-
-			/*if (uMsg == Win32::Messages::Destroy)
-				return self.Process(Win32Message<Win32::Messages::Destroy>{ hwnd, wParam, lParam });
-			if (uMsg == Win32::Messages::Paint)
-				return self.Process(Win32Message<Win32::Messages::Paint>{ hwnd, wParam, lParam });
-			if (uMsg == Win32::Messages::KeyUp)
-				return self.Process(Win32Message<Win32::Messages::KeyUp>{ hwnd, wParam, lParam });
-			if (uMsg == Win32::Messages::Command)
-				return self.Process(Win32Message<Win32::Messages::Command>{ hwnd, wParam, lParam });
-			return self.Process(GenericWin32Message{ hwnd, uMsg, wParam, lParam });*/
 		}
 
 		//
 		// The generic message handler.
-		auto Process(this Window& self, auto&& args) noexcept -> Win32::LRESULT
+		auto Process(this TopLevelWindow& self, auto&& args) noexcept -> Win32::LRESULT
 		{
 			if (args.uMsg == Win32::Messages::Destroy)
 			{

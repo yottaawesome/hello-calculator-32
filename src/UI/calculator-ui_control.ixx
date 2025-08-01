@@ -5,6 +5,7 @@ import :ui_common;
 import :error;
 import :string;
 import :log;
+import :ui_capability;
 
 // Controls
 export namespace UI
@@ -22,28 +23,7 @@ export namespace UI
 		int Height = 0;
 	};
 
-	struct TextableCapability
-	{
-		auto GetText(this auto& self) -> std::wstring
-		{
-			auto handle = self.GetHandle();
-			if (not handle)
-				return {};
-			std::wstring buffer{ Win32::GetWindowTextLengthW(handle), '\0' };
-			Win32::GetWindowTextW(self.GetHandle(), buffer.data(), static_cast<int>(buffer.size()));
-		}
-		auto SetText(this auto& self, std::wstring_view text)
-		{
-			if (auto handle = self.GetHandle())
-				Win32::SetWindowTextW(handle, text.data());
-		}
-		auto AppendText(this auto& self, std::wstring_view text) 
-		{
-			self.SetText(std::format(L"{}{}"), self.GetText(), text);
-		}
-	};
-
-	struct Control : SimpleWindow
+	struct Control : Window
 	{
 		Control() = default;
 		Control(ControlProperties properties) : m_properties(properties) {}
@@ -121,7 +101,7 @@ export namespace UI
 	};
 
 	template<unsigned VId, int VX, int VY, int VWidth, int VHeight>
-	struct Output : Control, TextableCapability
+	struct Output : Control, Textable
 	{
 		using Control::Process;
 
@@ -190,7 +170,7 @@ export namespace UI
 	};
 
 	template<unsigned VValue, unsigned VId, int VX, int VY, int VWidth, int VHeight>
-	struct NumberButton : Button, TextableCapability
+	struct NumberButton : Button, Textable
 	{
 		using Button::Process;
 
@@ -206,6 +186,11 @@ export namespace UI
 		void OnClick(this auto& self) 
 		{
 			Log::Info("HA");
+		}
+
+		constexpr auto Value(this const auto&) noexcept -> unsigned
+		{
+			return VValue;
 		}
 
 		std::function<auto()->void> Clicked = [] {};
@@ -234,7 +219,7 @@ export namespace UI
 		
 		auto GetSubclassId(this auto&) noexcept { return VId; }
 
-		auto GetDefaultProperties(this auto&& self) -> ControlProperties
+		auto GetDefaultProperties(this const auto&) -> ControlProperties
 		{
 			return {
 				.Id = VId,
@@ -247,5 +232,10 @@ export namespace UI
 				.Height = VHeight
 			};
 		};
+
+		constexpr auto Operator(this const auto&) noexcept -> std::string 
+		{ 
+			return VText.ToView(); 
+		}
 	};
 }

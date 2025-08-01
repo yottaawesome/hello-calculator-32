@@ -6,11 +6,13 @@ export import :win32;
 export import :error;
 export import :raii;
 export import :string;
-export import :ui_mainwindow;
+export import :ui_toplevelwindow;
+export import :ui_calculatormainwindow;
 export import :ui_control;
 export import :ui_common;
 export import :ui_font;
 export import :log;
+export import :ui_capability;
 
 import std;
 
@@ -33,9 +35,7 @@ try
 		icc.dwSize = sizeof(icc)
 	};
 	Win32::InitCommonControlsEx(&icc);
-
-	UI::MainWindow app;
-	app.Register().Create().Show().MainLoop();
+	UI::CalculatorMainWindow{}.Register().Create().Show().MainLoop();
 
 	return 0;
 }

@@ -287,7 +287,6 @@ export namespace Win32
 			AutoCheckBox = BS_AUTOCHECKBOX,
 			PushLike = BS_PUSHLIKE
 		};
-		
 	}
 
 	constexpr Win32Constant<IDI_APPLICATION> IdiApplication;

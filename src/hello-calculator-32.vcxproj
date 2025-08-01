@@ -184,9 +184,10 @@
     <ClCompile Include="Log\calculator-log.ixx" />
     <ClCompile Include="Raii\calculator-raii.ixx" />
     <ClCompile Include="String\calculator-string.ixx" />
+    <ClCompile Include="UI\calculator-ui_capability.ixx" />
     <ClCompile Include="UI\calculator-ui_font.ixx" />
-    <ClCompile Include="UI\calculator-ui_mainwindow.ixx" />
-    <ClCompile Include="UI\calculator-ui_window.ixx" />
+    <ClCompile Include="UI\calculator-ui_calculatormainwindow.ixx" />
+    <ClCompile Include="UI\calculator-ui_toplevelwindow.ixx" />
     <ClCompile Include="UI\calculator-ui_common.ixx" />
     <ClCompile Include="UI\calculator-ui_control.ixx" />
     <ClCompile Include="calculator.ixx" />

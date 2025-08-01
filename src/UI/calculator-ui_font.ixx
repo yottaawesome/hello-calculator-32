@@ -8,7 +8,7 @@ export namespace UI
 {
 	struct SystemFontLoader
 	{
-		auto Get() const -> Win32::HFONT
+		auto Get(this const auto) -> Win32::HFONT
 		{
 			static Raii::FontUniquePtr font =
 				[] -> Raii::FontUniquePtr
@@ -23,6 +23,11 @@ export namespace UI
 				}();
 
 			return font.get();
+		}
+
+		operator Win32::HFONT(this const auto self)
+		{
+			return self.Get();
 		}
 	};
 	

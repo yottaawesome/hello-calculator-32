@@ -1,8 +1,8 @@
-export module calculator:ui_mainwindow;
+export module calculator:ui_calculatormainwindow;
 import std;
 import :win32;
 import :ui_common;
-import :ui_window;
+import :ui_toplevelwindow;
 import :ui_control;
 import :ui_font;
 
@@ -48,27 +48,27 @@ export namespace UI
 	struct ButtonGroup
 	{
 		using TupleType = std::tuple<
-			OutputWindow,
+			Button0,
 			Button1,
 			Button2,
 			Button3,
-			ButtonPlus,
 			Button4,
 			Button5,
 			Button6,
-			ButtonMinus,
 			Button7,
 			Button8,
 			Button9,
+			OutputWindow,
+			ButtonPlus,
+			ButtonMinus,
 			ButtonTimes,
-			Button0,
 			ButtonDecimal,
 			ButtonClear,
 			ButtonDivide,
 			ButtonEquals
 		>;
 
-		auto Get(this auto& self, unsigned id, auto&&...invocable) -> auto
+		void Get(this auto&& self, unsigned id, auto&&...invocable)
 		{
 			[id]<typename...TArgs>(std::tuple<TArgs...>& tuple, auto&&...invocable)
 			{
@@ -76,7 +76,7 @@ export namespace UI
 			}(self.Buttons, std::forward<decltype(invocable)>(invocable)...);
 		}
 
-		auto RunOn(this auto& self, auto&&...invocable)
+		void RunOn(this auto&& self, auto&&...invocable)
 		{
 			[]<typename...TArgs>(std::tuple<TArgs...>&tuple, auto&& overload)
 			{
@@ -93,16 +93,16 @@ export namespace UI
 		TupleType Buttons;
 	};
 
-	struct MainWindow : Window
+	struct CalculatorMainWindow : TopLevelWindow
 	{
-		using Window::Process;
+		using TopLevelWindow::Process;
 
-		auto Process(this auto& self, Win32Message<Win32::Messages::Paint> message) -> Win32::LRESULT
+		auto Process(this auto&& self, Win32Message<Win32::Messages::Paint> message) -> Win32::LRESULT
 		{
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
 		}
 
-		auto Process(this auto& self, Win32Message<Win32::Messages::Command> message) -> Win32::LRESULT
+		auto Process(this auto&& self, Win32Message<Win32::Messages::Command> message) -> Win32::LRESULT
 		{
 			self.m_buttons.Get(
 				Win32::LoWord(message.wParam),
@@ -110,13 +110,11 @@ export namespace UI
 				[](auto& control) { }
 			);
 
-			self.m_buttons.RunOn([](Button0&) {Log::Info("Got it"); });
-
 			Log::Info("{}", Win32::LoWord(message.wParam));
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
 		}
 
-		auto Process(this auto& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
+		auto Process(this auto&& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
 		{
 			Win32::SendMessageW(std::get<1>(self.m_buttons.Buttons).GetHandle(), Win32::Messages::ButtonClick, 0, 0);
 			// Focus needs to be set back to the window, because it goes to the button
@@ -150,18 +148,17 @@ export namespace UI
 			};
 		}
 
-		auto Init(this auto& self)
+		auto Init(this auto&& self)
 		{
-			self.SetFont(UI::SystemFont.Get());
+			self.SetFont(UI::SystemFont);
 			// Create child windows and set their font.
-			[]<typename...TArgs>(Win32::HWND parent, std::tuple<TArgs...>&tuple)
-			{
-				([parent, &control = std::get<TArgs>(tuple)]
+			self.m_buttons.RunOn(
+				[&self](auto&& control)
 				{
-					control.Create(parent);
-					control.SetFont(UI::SystemFont.Get());
-				}(), ...);
-			}(self.m_window.get(), self.m_buttons.Buttons);
+					control.Create(self.m_window.get());
+					control.SetFont(UI::SystemFont);
+				}
+			);
 		}
 
 	protected:
