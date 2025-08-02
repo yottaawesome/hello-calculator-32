@@ -51,5 +51,8 @@
     <ClCompile Include="UI\calculator-ui_capability.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Misc\calculator-misc.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

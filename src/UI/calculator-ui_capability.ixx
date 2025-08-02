@@ -11,18 +11,28 @@ export namespace UI
 			auto handle = self.GetHandle();
 			if (not handle)
 				return {};
-			std::wstring buffer(Win32::GetWindowTextLengthW(handle), '\0');
+			std::wstring buffer(Win32::GetWindowTextLengthW(handle)+1, '\0');
 			Win32::GetWindowTextW(self.GetHandle(), buffer.data(), static_cast<int>(buffer.size()));
+			if (not buffer.empty()) // Remove trailing null character.
+				buffer.pop_back();
 			return buffer;
 		}
+
 		auto SetText(this auto&& self, std::wstring_view text)
 		{
+			// Beware of embedded nulls -- these will cut the displayed text short.
 			if (auto handle = self.GetHandle())
 				Win32::SetWindowTextW(handle, text.data());
 		}
+
 		auto AppendText(this auto&& self, std::wstring_view text)
 		{
-			self.SetText(std::format(L"{}{}"), self.GetText(), text);
+			self.SetText(std::format(L"{}{}", self.GetText(), text));
+		}
+
+		auto ClearText(this auto&& self)
+		{
+			self.SetText(L"");
 		}
 	};
 }

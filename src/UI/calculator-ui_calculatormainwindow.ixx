@@ -1,10 +1,12 @@
 export module calculator:ui_calculatormainwindow;
 import std;
 import :win32;
+import :string;
 import :ui_common;
 import :ui_toplevelwindow;
 import :ui_control;
 import :ui_font;
+import :misc;
 
 export namespace UI
 {
@@ -39,60 +41,22 @@ export namespace UI
 	// 6th row
 	using ButtonEquals = OperationButton<L"=", 117, StartX + ButtonWidth * 0, StartY + ButtonHeight * 5, RowWidth, ButtonHeight>;
 
-	template<typename...Ts>
-	struct Overload : Ts...
+	using ButtonGroup = Misc::TypeSequence<
+		Button0, Button1, Button2, Button3, Button4, Button5, Button6, Button7, Button8, Button9,
+		OutputWindow, ButtonPlus, ButtonMinus, ButtonTimes, ButtonDecimal, ButtonClear, ButtonDivide, ButtonEquals>;
+
+	template<typename T>
+	concept NumberInput = requires(T t, const T c)
 	{
-		using Ts::operator()...;
+		{ c.Value() } noexcept -> std::convertible_to<unsigned>;
+		{ c.ValueString() } noexcept -> std::convertible_to<std::wstring>;
 	};
+	// This is just a sanity check.
+	static_assert(UI::NumberInput<Button0>, "Expected Button0 to conform to NumberInput.");
+}
 
-	struct ButtonGroup
-	{
-		using TupleType = std::tuple<
-			Button0,
-			Button1,
-			Button2,
-			Button3,
-			Button4,
-			Button5,
-			Button6,
-			Button7,
-			Button8,
-			Button9,
-			OutputWindow,
-			ButtonPlus,
-			ButtonMinus,
-			ButtonTimes,
-			ButtonDecimal,
-			ButtonClear,
-			ButtonDivide,
-			ButtonEquals
-		>;
-
-		void Get(this auto&& self, unsigned id, auto&&...invocable)
-		{
-			[id]<typename...TArgs>(std::tuple<TArgs...>& tuple, auto&&...invocable)
-			{
-				((std::get<TArgs>(tuple).GetId() == id ? (Overload{ invocable... }(std::get<TArgs>(tuple)), true) : false) or ...);
-			}(self.Buttons, std::forward<decltype(invocable)>(invocable)...);
-		}
-
-		void RunOn(this auto&& self, auto&&...invocable)
-		{
-			[]<typename...TArgs>(std::tuple<TArgs...>&tuple, auto&& overload)
-			{
-				([&overload, &tuple]<typename T = TArgs>
-				{
-					if constexpr (std::invocable<decltype(overload), T&>)
-						std::invoke(overload, std::get<T>(tuple));
-					//if constexpr (requires { std::invoke(overload, std::get<T>(tuple)); })
-						//std::invoke(overload, std::get<T>(tuple));
-				}(), ...);
-			}(self.Buttons, Overload{ std::forward<decltype(invocable)>(invocable)... });
-		}
-
-		TupleType Buttons;
-	};
-
+export namespace UI
+{
 	struct CalculatorMainWindow : TopLevelWindow
 	{
 		using TopLevelWindow::Process;
@@ -106,17 +70,28 @@ export namespace UI
 		{
 			self.m_buttons.Get(
 				Win32::LoWord(message.wParam),
-				[&self](Button0& control) { Log::Info("Zero was pressed!"); },
-				[](auto& control) { }
+				[&self](NumberInput auto& btn) 
+				{ 
+					self.m_buttons.GetByType<OutputWindow>().AppendText(btn.ValueString());
+				},
+				[](ButtonPlus& btn) { Log::Info("{} was pressed!", btn.Operator()); },
+				[](ButtonMinus& btn) { Log::Info("{} was pressed!", btn.Operator()); },
+				[](ButtonTimes& btn) { Log::Info("{} was pressed!", btn.Operator()); },
+				[](ButtonDivide& btn) { Log::Info("{} was pressed!", btn.Operator()); },
+				[](ButtonEquals& btn) { Log::Info("{} was pressed!", btn.Operator()); },
+				[](ButtonDecimal& btn) { Log::Info("{} was pressed!", btn.Operator()); },
+				[&self](ButtonClear& btn) 
+				{
+					self.m_buttons.GetByType<OutputWindow>().ClearText();
+				},
+				[](auto& control) { Log::Info("Other"); }
 			);
-
-			Log::Info("{}", Win32::LoWord(message.wParam));
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
 		}
 
 		auto Process(this auto&& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
 		{
-			Win32::SendMessageW(std::get<1>(self.m_buttons.Buttons).GetHandle(), Win32::Messages::ButtonClick, 0, 0);
+			Win32::SendMessageW(self.m_buttons.GetByType<Button0>().GetHandle(), Win32::Messages::ButtonClick, 0, 0);
 			// Focus needs to be set back to the window, because it goes to the button
 			self.TakeFocus();
 
@@ -152,7 +127,7 @@ export namespace UI
 		{
 			self.SetFont(UI::SystemFont);
 			// Create child windows and set their font.
-			self.m_buttons.RunOn(
+			self.m_buttons.RunAll(
 				[&self](auto&& control)
 				{
 					control.Create(self.m_window.get());

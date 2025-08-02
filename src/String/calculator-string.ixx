@@ -102,3 +102,88 @@ export namespace String
         return wstrTo;
     }
 }
+
+export namespace std
+{
+	// wchar_t -> char
+	template<size_t N>
+	struct formatter<wchar_t[N], char> : formatter<char, char>
+	{
+		template <class TContext>
+		auto format(const wchar_t(str)[N], TContext&& ctx) const
+		{
+			return format_to(ctx.out(), "{}", String::ConvertString(str));
+		}
+	};
+
+	template<>
+	struct formatter<const wchar_t*, char> : formatter<char, char>
+	{
+		template <class TContext>
+		auto format(const wchar_t* str, TContext&& ctx) const
+		{
+			return format_to(ctx.out(), "{}", String::ConvertString(str));
+		}
+	};
+
+	template<>
+	struct formatter<wstring, char> : formatter<char, char>
+	{
+		template <class TContext>
+		auto format(const wstring& str, TContext&& ctx) const
+		{
+			return format_to(ctx.out(), "{}", String::ConvertString(str));
+		}
+	};
+
+	template<>
+	struct formatter<wstring_view, char> : formatter<char, char>
+	{
+		template <class TContext>
+		auto format(wstring_view str, TContext&& ctx) const
+		{
+			return format_to(ctx.out(), "{}", String::ConvertString(str));
+		}
+	};
+
+	// char -> wchar_t
+	template<size_t N>
+	struct formatter<char[N], wchar_t> : formatter<wchar_t, wchar_t>
+	{
+		template <class TContext>
+		auto format(const char(str)[N], TContext&& ctx) const
+		{
+			return format_to(ctx.out(), L"{}", String::ConvertString(str));
+		}
+	};
+
+	template<>
+	struct formatter<const char*, wchar_t> : formatter<wchar_t, wchar_t>
+	{
+		template <class TContext>
+		auto format(const char* str, TContext&& ctx) const
+		{
+			return format_to(ctx.out(), L"{}", String::ConvertString(str));
+		}
+	};
+
+	template<>
+	struct formatter<string, wchar_t> : formatter<wchar_t, wchar_t>
+	{
+		template <class TContext>
+		auto format(const string& str, TContext&& ctx) const
+		{
+			return format_to(ctx.out(), L"{}", String::ConvertString(str));
+		}
+	};
+
+	template<>
+	struct formatter<string_view, wchar_t> : formatter<wchar_t, wchar_t>
+	{
+		template <class TContext>
+		auto format(string_view str, TContext&& ctx) const
+		{
+			return format_to(ctx.out(), L"{}", String::ConvertString(str));
+		}
+	};
+}

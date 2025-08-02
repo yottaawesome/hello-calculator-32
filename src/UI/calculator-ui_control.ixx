@@ -185,12 +185,16 @@ export namespace UI
 
 		void OnClick(this auto& self) 
 		{
-			Log::Info("HA");
 		}
 
 		constexpr auto Value(this const auto&) noexcept -> unsigned
 		{
 			return VValue;
+		}
+
+		constexpr auto ValueString(this const auto&) noexcept -> std::wstring
+		{
+			return std::to_wstring(VValue);
 		}
 
 		std::function<auto()->void> Clicked = [] {};
@@ -233,7 +237,7 @@ export namespace UI
 			};
 		};
 
-		constexpr auto Operator(this const auto&) noexcept -> std::string 
+		constexpr auto Operator(this const auto&) noexcept -> std::wstring_view
 		{ 
 			return VText.ToView(); 
 		}

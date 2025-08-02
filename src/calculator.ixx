@@ -13,6 +13,7 @@ export import :ui_common;
 export import :ui_font;
 export import :log;
 export import :ui_capability;
+export import :misc;
 
 import std;
 
@@ -35,7 +36,7 @@ try
 		icc.dwSize = sizeof(icc)
 	};
 	Win32::InitCommonControlsEx(&icc);
-	UI::CalculatorMainWindow{}.Register().Create().Show().MainLoop();
+	UI::CalculatorMainWindow{}.Create().Show().MainLoop();
 
 	return 0;
 }
