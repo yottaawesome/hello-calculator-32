@@ -17,11 +17,21 @@ export namespace UI
 		// Registers the window class.
 		auto Register(this auto&& self) -> decltype(auto)
 		{
+			constexpr auto AlreadyRegistered =
+				[](auto name)
+				{
+					Win32::WNDCLASSEXW classInfo{};
+					return Win32::GetClassInfoExW(nullptr, name, &classInfo);
+				};
+
 			auto wndClass = self.GetClass();
-			wndClass.lpfnWndProc = WindowProc<std::remove_cvref_t<decltype(self)>>;
-			if (Win32::ATOM atom = Win32::RegisterClassExW(&wndClass); atom)
-				return std::forward<decltype(self)>(self);
-			throw Error::Win32Error{};
+			if (not AlreadyRegistered(wndClass.lpszClassName))
+			{
+				wndClass.lpfnWndProc = WindowProc<std::remove_cvref_t<decltype(self)>>;
+				if (not Win32::RegisterClassExW(&wndClass))
+					throw Error::Win32Error{};
+			}
+			return std::forward<decltype(self)>(self);
 		}
 
 		//
