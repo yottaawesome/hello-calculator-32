@@ -52,7 +52,7 @@ export namespace UI
 		{ c.ValueString() } noexcept -> std::convertible_to<std::wstring>;
 	};
 	// This is just a sanity check.
-	static_assert(UI::NumberInput<Button0>, "Expected Button0 to conform to NumberInput.");
+	static_assert(NumberInput<Button0>, "Expected Button0 to conform to NumberInput.");
 }
 
 export namespace UI
@@ -68,8 +68,8 @@ export namespace UI
 
 		auto Process(this auto&& self, Win32Message<Win32::Messages::Command> message) -> Win32::LRESULT
 		{
-			self.m_buttons.Get(
-				Win32::LoWord(message.wParam),
+			self.m_buttons.Find(
+				[id = Win32::LoWord(message.wParam)](auto&& control) { return control.GetId() == id; },
 				[&self](NumberInput auto& btn) 
 				{ 
 					self.m_buttons.GetByType<OutputWindow>().AppendText(btn.ValueString());

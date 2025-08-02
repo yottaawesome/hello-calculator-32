@@ -58,6 +58,7 @@ export namespace Win32
 		::INITCOMMONCONTROLSEX,
 		::NONCLIENTMETRICS,
 		::HFONT,
+		::WORD,
 		::SetFocus,
 		::MessageBoxA,
 		::MessageBoxW,
@@ -298,5 +299,6 @@ export namespace Win32
 	constexpr auto CpUtf8 = CP_UTF8;
 	constexpr auto WcNoBestFitChars = WC_NO_BEST_FIT_CHARS;
 
-	constexpr auto LoWord(auto value) { return LOWORD(value); }
+	constexpr auto LoWord(auto value) noexcept -> WORD { return LOWORD(value); }
+	constexpr auto HiWord(auto value) noexcept -> WORD { return HIWORD(value); }
 }
