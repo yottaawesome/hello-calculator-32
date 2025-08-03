@@ -116,7 +116,7 @@ export namespace UI
 		{
 			return {
 				.Id = VId,
-				.Text = L"Hello",
+				.Text = L"", // initial window text
 				.Styles = Win32::Styles::Child | Win32::Styles::Visible | Win32::Styles::Border,
 				.X = VX,
 				.Y = VY,
@@ -158,7 +158,7 @@ export namespace UI
 			return {
 				.Id = 100,
 				.Class = L"Button",
-				.Text = L"Hello",
+				.Text = L"", // window text
 				.Styles = Win32::Styles::PushButton | Win32::Styles::Child | Win32::Styles::Visible,
 				.ExtendedStyles = Win32::WindowStyles::WindowEdge,
 				.X = 10,

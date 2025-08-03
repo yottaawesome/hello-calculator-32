@@ -51,7 +51,11 @@ export namespace UI
 		{ c.Value() } noexcept -> std::convertible_to<unsigned>;
 		{ c.ValueString() } noexcept -> std::convertible_to<std::wstring>;
 	};
-	// This is just a sanity check.
+
+	template<typename T>
+	concept OperatorInput = Misc::OneOf<T, ButtonPlus, ButtonMinus, ButtonTimes, ButtonDivide>;
+	
+		// This is just a sanity check.
 	static_assert(NumberInput<Button0>, "Expected Button0 to conform to NumberInput.");
 }
 
@@ -60,27 +64,53 @@ export namespace UI
 	struct Calculator
 	{
 		using OperatorTypes = std::variant<std::plus<double>, std::minus<double>, std::multiplies<double>, std::divides<double>>;
-		std::optional<double> Left = 0;
-		std::optional<double> Right = 0;
-		OperatorTypes Operator;
+		std::optional<double> Left = std::nullopt;
+		std::optional<double> Right = std::nullopt;
+		std::optional<OperatorTypes> Operator = std::nullopt;
 		
 		constexpr auto InsertOperand(this auto&& self, double value)
 		{
 			if (not self.Left)
 				self.Left = value;
-			if (not self.Right)
+			else if (not self.Right)
 				self.Right = value;
 		}
 		
-		constexpr auto BothSpecified(this auto&& self) noexcept -> bool { return self.Left and self.Right; }
+		constexpr auto OperandsSpecified(this auto&& self) noexcept -> bool 
+		{ 
+			return self.Left.has_value() and self.Right.has_value(); 
+		}
 
-		constexpr auto Result(this auto&& self, auto mathOperator) noexcept -> double
+		constexpr auto LeftAndOperator(this auto&& self) noexcept -> bool
 		{
-			if (not self.BothSpecified) 
-				return;
-			double result = mathOperator(Left, Right);
-			self.Left = result;
-			self.Right = std::nullopt;
+			return self.Left.has_value() and self.Operator;
+		}
+
+		constexpr auto AllSpecified(this auto&& self) noexcept -> bool
+		{
+			return self.OperandsSpecified() and self.Operator;
+		}
+
+		constexpr auto Clear(this auto&& self) noexcept
+		{
+			self.Left = std::nullopt; 
+			self.Right = std::nullopt; 
+			self.Operator = std::nullopt;
+		}
+
+		constexpr auto Result(this auto&& self) -> double
+		{
+			if (not self.OperandsSpecified() or not self.Operator) 
+				throw std::runtime_error("Both numbers are not specified.");
+
+			double result = std::visit(
+				[left = *self.Left, right = *self.Right](const auto& mathOperator)
+				{
+					return mathOperator(left, right);
+				},
+				*self.Operator
+			);
+			self.Clear();
 			return result;
 		}
 	};
@@ -94,6 +124,27 @@ export namespace UI
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
 		}
 
+		Calculator m_calculator;
+
+		auto HasOnlyZeroesForDecimalPart(this auto&&, double num) -> bool
+		{
+			double integerPart;
+			double fractionalPart = std::modf(num, &integerPart);
+			// Due to floating-point precision, comparing directly to 0.0 might be unreliable.
+			// Instead, compare the absolute value of the fractional part to a small epsilon.
+			constexpr double Epsilon = 1e-9; // A small value to account for precision issues
+			return std::abs(fractionalPart) < Epsilon;
+		}
+
+		auto SetOutput(this auto&& self, double result)
+		{
+			auto& textWindow = self.m_buttons.GetByType<OutputWindow>();
+			if (self.HasOnlyZeroesForDecimalPart(result))
+				textWindow.SetText(std::to_wstring(static_cast<int>(result)));
+			else
+				textWindow.SetText(std::to_wstring(result));
+		}
+
 		auto Process(this auto&& self, Win32Message<Win32::Messages::Command> message) -> Win32::LRESULT
 		{
 			self.m_buttons.Find(
@@ -102,15 +153,65 @@ export namespace UI
 				{ 
 					self.m_buttons.GetByType<OutputWindow>().AppendText(btn.ValueString());
 				},
-				[](ButtonPlus& btn) { Log::Info("{} was pressed!", btn.Operator()); },
-				[](ButtonMinus& btn) { Log::Info("{} was pressed!", btn.Operator()); },
-				[](ButtonTimes& btn) { Log::Info("{} was pressed!", btn.Operator()); },
-				[](ButtonDivide& btn) { Log::Info("{} was pressed!", btn.Operator()); },
-				[](ButtonEquals& btn) { Log::Info("{} was pressed!", btn.Operator()); },
+				[&self](OperatorInput auto& btn)
+				{
+					Log::Info("{} was pressed!", btn.Operator());
+					auto& textWindow = self.m_buttons.GetByType<OutputWindow>();
+					try
+					{
+						Misc::Overload{
+							[&self](ButtonPlus&) {self.m_calculator.Operator = std::plus<double>{}; },
+							[&self](ButtonMinus&) {self.m_calculator.Operator = std::minus<double>{}; },
+							[&self](ButtonTimes&) {self.m_calculator.Operator = std::multiplies<double>{}; },
+							[&self](ButtonDivide&) {self.m_calculator.Operator = std::divides<double>{}; }
+						}(btn);
+
+						auto text = textWindow.GetText();
+						if (text.empty())
+							return;
+
+						double value = std::stod(text);
+						if (std::isnan(value))
+							throw std::out_of_range("NaN");
+						self.m_calculator.Left = value;
+						textWindow.ClearText();
+					}
+					catch (const std::exception& ex)
+					{
+						Log::Error("Error: {}", ex.what());
+						textWindow.ClearText();
+						self.m_calculator.Clear();
+					}
+				},
+				[&self](ButtonEquals& btn) 
+				{ 
+					Log::Info("{} was pressed!", btn.Operator());
+					auto& textWindow = self.m_buttons.GetByType<OutputWindow>();
+					try
+					{
+						auto text = textWindow.GetText();
+						if (text.empty())
+							return;
+						double value = std::stod(text);
+						if (std::isnan(value))
+							throw std::out_of_range("NaN");
+						self.m_calculator.InsertOperand(value);
+						double result = self.m_calculator.Result();
+						self.m_calculator.Clear();
+						self.SetOutput(result);
+					}
+					catch (const std::exception& ex)
+					{
+						Log::Error("Error: {}", ex.what());
+						textWindow.ClearText();
+						self.m_calculator.Clear();
+					}
+				},
 				[](ButtonDecimal& btn) { Log::Info("{} was pressed!", btn.Operator()); },
 				[&self](ButtonClear& btn) 
 				{
 					self.m_buttons.GetByType<OutputWindow>().ClearText();
+					self.m_calculator.Clear();
 				},
 				[](auto& control) { Log::Info("Other"); }
 			);
@@ -119,7 +220,8 @@ export namespace UI
 
 		auto Process(this auto&& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
 		{
-			Win32::SendMessageW(self.m_buttons.GetByType<Button0>().GetHandle(), Win32::Messages::ButtonClick, 0, 0);
+			// Todo: handle keypad
+			//Win32::SendMessageW(self.m_buttons.GetByType<Button0>().GetHandle(), Win32::Messages::ButtonClick, 0, 0);
 			// Focus needs to be set back to the window, because it goes to the button
 			self.TakeFocus();
 

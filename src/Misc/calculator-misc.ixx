@@ -17,6 +17,9 @@ export namespace Misc
 		using Ts::operator()...;
 	};
 
+	template<typename T, typename...TTypes>
+	concept OneOf = (std::same_as<std::remove_cvref_t<T>, TTypes> or ...);
+
 	template<typename...TTypes>
 	struct TypeSequence
 	{
