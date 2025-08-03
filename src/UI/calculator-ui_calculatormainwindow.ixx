@@ -57,6 +57,34 @@ export namespace UI
 
 export namespace UI
 {
+	struct Calculator
+	{
+		using OperatorTypes = std::variant<std::plus<double>, std::minus<double>, std::multiplies<double>, std::divides<double>>;
+		std::optional<double> Left = 0;
+		std::optional<double> Right = 0;
+		OperatorTypes Operator;
+		
+		constexpr auto InsertOperand(this auto&& self, double value)
+		{
+			if (not self.Left)
+				self.Left = value;
+			if (not self.Right)
+				self.Right = value;
+		}
+		
+		constexpr auto BothSpecified(this auto&& self) noexcept -> bool { return self.Left and self.Right; }
+
+		constexpr auto Result(this auto&& self, auto mathOperator) noexcept -> double
+		{
+			if (not self.BothSpecified) 
+				return;
+			double result = mathOperator(Left, Right);
+			self.Left = result;
+			self.Right = std::nullopt;
+			return result;
+		}
+	};
+
 	struct CalculatorMainWindow : TopLevelWindow
 	{
 		using TopLevelWindow::Process;
