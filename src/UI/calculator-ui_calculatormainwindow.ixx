@@ -145,12 +145,12 @@ export namespace UI
 				textWindow.SetText(std::to_wstring(result));
 		}
 
-		auto NumberButtonClicked(this auto&& self, NumberInput auto& btn)
+		auto Clicked(this auto&& self, NumberInput auto& btn)
 		{
 			self.m_buttons.GetByType<OutputWindow>().AppendText(btn.ValueString());
 		}
 
-		auto OperatorButtonClicked(this auto&& self, OperatorInput auto& btn)
+		auto Clicked(this auto&& self, OperatorInput auto& btn)
 		{
 			Log::Info("{} was pressed!", btn.Operator());
 			auto& textWindow = self.m_buttons.GetByType<OutputWindow>();
@@ -181,7 +181,7 @@ export namespace UI
 			}
 		}
 
-		auto EqualsButtonClicked(this auto&& self, ButtonEquals& btn)
+		auto Clicked(this auto&& self, ButtonEquals& btn)
 		{
 			Log::Info("{} was pressed!", btn.Operator());
 			auto& textWindow = self.m_buttons.GetByType<OutputWindow>();
@@ -206,7 +206,7 @@ export namespace UI
 			}
 		}
 
-		auto DecimalButtonClicked(this auto&& self, ButtonDecimal& btn)
+		auto Clicked(this auto&& self, ButtonDecimal& btn)
 		{
 			Log::Info("{} was pressed!", btn.Operator());
 
@@ -216,7 +216,7 @@ export namespace UI
 				output.AppendText(L".");
 		}
 
-		auto ClearButtonClicked(this auto&& self, ButtonClear& btn)
+		auto Clicked(this auto&& self, ButtonClear& btn)
 		{
 			self.m_buttons.GetByType<OutputWindow>().ClearText();
 			self.m_calculator.Clear();
@@ -226,11 +226,11 @@ export namespace UI
 		{
 			self.m_buttons.Find(
 				[id = Win32::LoWord(message.wParam)](auto&& control) { return control.GetId() == id; },
-				[&self](NumberInput auto& btn) { self.NumberButtonClicked(btn); },
-				[&self](OperatorInput auto& btn) { self.OperatorButtonClicked(btn); },
-				[&self](ButtonEquals& btn) { self.EqualsButtonClicked(btn); },
-				[&self](ButtonDecimal& btn) { self.DecimalButtonClicked(btn); },
-				[&self](ButtonClear& btn) { self.ClearButtonClicked(btn); },
+				[&self](NumberInput auto& btn) { self.Clicked(btn); },
+				[&self](OperatorInput auto& btn) { self.Clicked(btn); },
+				[&self](ButtonEquals& btn) { self.Clicked(btn); },
+				[&self](ButtonDecimal& btn) { self.Clicked(btn); },
+				[&self](ButtonClear& btn) { self.Clicked(btn); },
 				[](auto& control) { Log::Info("Other"); }
 			);
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
