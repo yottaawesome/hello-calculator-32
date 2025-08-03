@@ -3,17 +3,13 @@ import std;
 
 export namespace Misc
 {
-	consteval auto IsDebug() noexcept -> bool
-	{
+	constexpr bool IsDebug =
 #ifdef _DEBUG
-		return true;
+		true;
+#else
+		false;
 #endif
-	}
-
-	consteval auto IsRelease() noexcept -> bool
-	{
-		return not IsDebug();
-	}
+	constexpr bool IsRelease = not IsDebug;
 
 	template<typename...Ts>
 	struct Overload : Ts...
