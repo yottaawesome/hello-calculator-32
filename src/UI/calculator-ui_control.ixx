@@ -141,7 +141,7 @@ export namespace UI
 			: Control(properties)
 		{ }
 
-		auto GetClass(this auto&&) noexcept -> std::wstring_view
+		constexpr auto GetClass(this auto&&) noexcept -> std::wstring_view
 		{
 			return L"Button";
 		}
