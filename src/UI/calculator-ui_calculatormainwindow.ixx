@@ -7,6 +7,7 @@ import :ui_toplevelwindow;
 import :ui_control;
 import :ui_font;
 import :misc;
+import :math;
 
 export namespace UI
 {
@@ -61,60 +62,6 @@ export namespace UI
 
 export namespace UI
 {
-	struct Calculator
-	{
-		using OperatorTypes = std::variant<std::plus<double>, std::minus<double>, std::multiplies<double>, std::divides<double>>;
-		std::optional<double> Left = std::nullopt;
-		std::optional<double> Right = std::nullopt;
-		std::optional<OperatorTypes> Operator = std::nullopt;
-		
-		constexpr auto InsertOperand(this auto&& self, double value)
-		{
-			if (not self.Left)
-				self.Left = value;
-			else if (not self.Right)
-				self.Right = value;
-		}
-		
-		constexpr auto OperandsSpecified(this auto&& self) noexcept -> bool 
-		{ 
-			return self.Left.has_value() and self.Right.has_value(); 
-		}
-
-		constexpr auto LeftAndOperator(this auto&& self) noexcept -> bool
-		{
-			return self.Left.has_value() and self.Operator;
-		}
-
-		constexpr auto AllSpecified(this auto&& self) noexcept -> bool
-		{
-			return self.OperandsSpecified() and self.Operator;
-		}
-
-		constexpr auto Clear(this auto&& self) noexcept
-		{
-			self.Left = std::nullopt; 
-			self.Right = std::nullopt; 
-			self.Operator = std::nullopt;
-		}
-
-		constexpr auto Result(this auto&& self) -> double
-		{
-			if (not self.OperandsSpecified() or not self.Operator) 
-				throw std::runtime_error("Both numbers are not specified.");
-
-			double result = std::visit(
-				[left = *self.Left, right = *self.Right](const auto& mathOperator)
-				{
-					return mathOperator(left, right);
-				},
-				*self.Operator
-			);
-			self.Clear();
-			return result;
-		}
-	};
-
 	struct CalculatorMainWindow : TopLevelWindow
 	{
 		using TopLevelWindow::Process;
@@ -122,27 +69,6 @@ export namespace UI
 		auto Process(this auto&& self, Win32Message<Win32::Messages::Paint> message) -> Win32::LRESULT
 		{
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
-		}
-
-		Calculator m_calculator;
-
-		auto HasOnlyZeroesForDecimalPart(this auto&&, double num) -> bool
-		{
-			double integerPart;
-			double fractionalPart = std::modf(num, &integerPart);
-			// Due to floating-point precision, comparing directly to 0.0 might be unreliable.
-			// Instead, compare the absolute value of the fractional part to a small epsilon.
-			constexpr double Epsilon = 1e-9; // A small value to account for precision issues
-			return std::abs(fractionalPart) < Epsilon;
-		}
-
-		auto SetOutput(this auto&& self, double result)
-		{
-			auto& textWindow = self.m_buttons.GetByType<OutputWindow>();
-			if (self.HasOnlyZeroesForDecimalPart(result))
-				textWindow.SetText(std::to_wstring(static_cast<int>(result)));
-			else
-				textWindow.SetText(std::to_wstring(result));
 		}
 
 		auto Clicked(this auto&& self, NumberInput auto& btn)
@@ -194,9 +120,9 @@ export namespace UI
 				if (std::isnan(value))
 					throw std::out_of_range("NaN");
 				self.m_calculator.InsertOperand(value);
-				double result = self.m_calculator.Result();
+				self.m_calculator.Calculate();
+				textWindow.SetText(self.m_calculator.GetCalculationAsString());
 				self.m_calculator.Clear();
-				self.SetOutput(result);
 			}
 			catch (const std::exception& ex)
 			{
@@ -286,5 +212,6 @@ export namespace UI
 
 	protected:
 		ButtonGroup m_buttons{};
+		Math::Calculator m_calculator;
 	};
 }

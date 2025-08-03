@@ -182,6 +182,7 @@
   <ItemGroup>
     <ClCompile Include="Error\calculator-error.ixx" />
     <ClCompile Include="Log\calculator-log.ixx" />
+    <ClCompile Include="Math\calculator-math.ixx" />
     <ClCompile Include="Misc\calculator-misc.ixx" />
     <ClCompile Include="Raii\calculator-raii.ixx" />
     <ClCompile Include="String\calculator-string.ixx" />

@@ -14,6 +14,7 @@ export import :ui_font;
 export import :log;
 export import :ui_capability;
 export import :misc;
+export import :math;
 
 import std;
 
