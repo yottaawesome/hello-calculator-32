@@ -145,82 +145,92 @@ export namespace UI
 				textWindow.SetText(std::to_wstring(result));
 		}
 
+		auto NumberButtonClicked(this auto&& self, NumberInput auto& btn)
+		{
+			self.m_buttons.GetByType<OutputWindow>().AppendText(btn.ValueString());
+		}
+
+		auto OperatorButtonClicked(this auto&& self, OperatorInput auto& btn)
+		{
+			Log::Info("{} was pressed!", btn.Operator());
+			auto& textWindow = self.m_buttons.GetByType<OutputWindow>();
+			try
+			{
+				Misc::Overload{
+					[&self](ButtonPlus&) {self.m_calculator.Operator = std::plus<double>{}; },
+					[&self](ButtonMinus&) {self.m_calculator.Operator = std::minus<double>{}; },
+					[&self](ButtonTimes&) {self.m_calculator.Operator = std::multiplies<double>{}; },
+					[&self](ButtonDivide&) {self.m_calculator.Operator = std::divides<double>{}; }
+				}(btn);
+
+				auto text = textWindow.GetText();
+				if (text.empty())
+					return;
+
+				double value = std::stod(text);
+				if (std::isnan(value))
+					throw std::out_of_range("NaN");
+				self.m_calculator.Left = value;
+				textWindow.ClearText();
+			}
+			catch (const std::exception& ex)
+			{
+				Log::Error("Error: {}", ex.what());
+				textWindow.ClearText();
+				self.m_calculator.Clear();
+			}
+		}
+
+		auto EqualsButtonClicked(this auto&& self, ButtonEquals& btn)
+		{
+			Log::Info("{} was pressed!", btn.Operator());
+			auto& textWindow = self.m_buttons.GetByType<OutputWindow>();
+			try
+			{
+				auto text = textWindow.GetText();
+				if (text.empty())
+					return;
+				double value = std::stod(text);
+				if (std::isnan(value))
+					throw std::out_of_range("NaN");
+				self.m_calculator.InsertOperand(value);
+				double result = self.m_calculator.Result();
+				self.m_calculator.Clear();
+				self.SetOutput(result);
+			}
+			catch (const std::exception& ex)
+			{
+				Log::Error("Error: {}", ex.what());
+				textWindow.ClearText();
+				self.m_calculator.Clear();
+			}
+		}
+
+		auto DecimalButtonClicked(this auto&& self, ButtonDecimal& btn)
+		{
+			Log::Info("{} was pressed!", btn.Operator());
+
+			auto& output = self.m_buttons.GetByType<OutputWindow>();
+			std::wstring out = output.GetText();
+			if (not out.contains(L"."))
+				output.AppendText(L".");
+		}
+
+		auto ClearButtonClicked(this auto&& self, ButtonClear& btn)
+		{
+			self.m_buttons.GetByType<OutputWindow>().ClearText();
+			self.m_calculator.Clear();
+		}
+
 		auto Process(this auto&& self, Win32Message<Win32::Messages::Command> message) -> Win32::LRESULT
 		{
 			self.m_buttons.Find(
 				[id = Win32::LoWord(message.wParam)](auto&& control) { return control.GetId() == id; },
-				[&self](NumberInput auto& btn) 
-				{ 
-					self.m_buttons.GetByType<OutputWindow>().AppendText(btn.ValueString());
-				},
-				[&self](OperatorInput auto& btn)
-				{
-					Log::Info("{} was pressed!", btn.Operator());
-					auto& textWindow = self.m_buttons.GetByType<OutputWindow>();
-					try
-					{
-						Misc::Overload{
-							[&self](ButtonPlus&) {self.m_calculator.Operator = std::plus<double>{}; },
-							[&self](ButtonMinus&) {self.m_calculator.Operator = std::minus<double>{}; },
-							[&self](ButtonTimes&) {self.m_calculator.Operator = std::multiplies<double>{}; },
-							[&self](ButtonDivide&) {self.m_calculator.Operator = std::divides<double>{}; }
-						}(btn);
-
-						auto text = textWindow.GetText();
-						if (text.empty())
-							return;
-
-						double value = std::stod(text);
-						if (std::isnan(value))
-							throw std::out_of_range("NaN");
-						self.m_calculator.Left = value;
-						textWindow.ClearText();
-					}
-					catch (const std::exception& ex)
-					{
-						Log::Error("Error: {}", ex.what());
-						textWindow.ClearText();
-						self.m_calculator.Clear();
-					}
-				},
-				[&self](ButtonEquals& btn) 
-				{ 
-					Log::Info("{} was pressed!", btn.Operator());
-					auto& textWindow = self.m_buttons.GetByType<OutputWindow>();
-					try
-					{
-						auto text = textWindow.GetText();
-						if (text.empty())
-							return;
-						double value = std::stod(text);
-						if (std::isnan(value))
-							throw std::out_of_range("NaN");
-						self.m_calculator.InsertOperand(value);
-						double result = self.m_calculator.Result();
-						self.m_calculator.Clear();
-						self.SetOutput(result);
-					}
-					catch (const std::exception& ex)
-					{
-						Log::Error("Error: {}", ex.what());
-						textWindow.ClearText();
-						self.m_calculator.Clear();
-					}
-				},
-				[&self](ButtonDecimal& btn) 
-				{ 
-					Log::Info("{} was pressed!", btn.Operator()); 
-
-					auto& output = self.m_buttons.GetByType<OutputWindow>();
-					std::wstring out = output.GetText();
-					if (not out.contains(L"."))
-						output.AppendText(L".");
-				},
-				[&self](ButtonClear& btn) 
-				{
-					self.m_buttons.GetByType<OutputWindow>().ClearText();
-					self.m_calculator.Clear();
-				},
+				[&self](NumberInput auto& btn) { self.NumberButtonClicked(btn); },
+				[&self](OperatorInput auto& btn) { self.OperatorButtonClicked(btn); },
+				[&self](ButtonEquals& btn) { self.EqualsButtonClicked(btn); },
+				[&self](ButtonDecimal& btn) { self.DecimalButtonClicked(btn); },
+				[&self](ButtonClear& btn) { self.ClearButtonClicked(btn); },
 				[](auto& control) { Log::Info("Other"); }
 			);
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
