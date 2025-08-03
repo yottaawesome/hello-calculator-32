@@ -207,7 +207,15 @@ export namespace UI
 						self.m_calculator.Clear();
 					}
 				},
-				[](ButtonDecimal& btn) { Log::Info("{} was pressed!", btn.Operator()); },
+				[&self](ButtonDecimal& btn) 
+				{ 
+					Log::Info("{} was pressed!", btn.Operator()); 
+
+					auto& output = self.m_buttons.GetByType<OutputWindow>();
+					std::wstring out = output.GetText();
+					if (not out.contains(L"."))
+						output.AppendText(L".");
+				},
 				[&self](ButtonClear& btn) 
 				{
 					self.m_buttons.GetByType<OutputWindow>().ClearText();
