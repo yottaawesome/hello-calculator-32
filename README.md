@@ -22,7 +22,7 @@ Five C++ features form the backbone of this implementation.
 
 ## Building
 
-Visual Studio 2022 with MSVC 17.14 or later with the C++ desktop workload are required to build the solution. Three build configurations are provided: `Release`, `Debug` and `Instrumented`. The `Instrumented` configuration has address sanitizer (ASAN) enabled, which ironically enough found [a bad codegen bug in MSVC](https://developercommunity.visualstudio.com/t/Runtime-crash-with-constexpr-and-std::st/10939905).
+Visual Studio 2022 with MSVC 17.14 or later with the C++ desktop workload is required to build the solution. Three build configurations are provided: `Release`, `Debug` and `Instrumented`. The `Instrumented` configuration has address sanitizer (ASAN) enabled, which ironically enough found [a bad codegen bug in MSVC](https://developercommunity.visualstudio.com/t/Runtime-crash-with-constexpr-and-std::st/10939905).
 
 ## TODO
 
