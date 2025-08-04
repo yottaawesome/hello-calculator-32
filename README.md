@@ -14,7 +14,7 @@ By contrast, a type-oriented approach sits somewhere between an object-oriented 
 
 Five C++ features form the backbone of this implementation.
 
-1. **Parameterized types:** rather than declaring a generic `Button` class that will represent all buttons, we can create parameterized types that represent each button. These strong types provider better guarantees than a generic `Button` class, e.g. you can't assign parameterized type to another parametized type; they are distinct. With distinct types, we can bring to bear stronger guarantees with things like function overloads, as opposed to runtime introspection and type coercion.
+1. **Parameterized types:** rather than declaring a generic `Button` class that will represent all buttons, we can create parameterized types that represent each button. These strong types provider better guarantees than a generic `Button` class, e.g. you can't assign parameterized type to another parametized type; they are distinct. We can extend these stronger guarantees with techniques like function overloads for application logic, as opposed to runtime inspection and type coercion of a type-erased collection.
 2. **Tuples:** tuples provide us a powerful mechanism to create a heterogeneous collection. By wrapping them up in a utility type, we can create something even more useful.
 3. **Deducing this/explicit object parameter:** a C++23 feature that makes CRTP-style techniques much easier and more convenient to implement, including static polymorphism.
 4. **Generic lambas and functions**: generic lambdas remain one of the most useful additions to the C++ and are essential in generic code.
