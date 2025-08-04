@@ -117,7 +117,7 @@ export namespace UI
 			return {
 				.Id = VId,
 				.Text = L"", // initial window text
-				.Styles = Win32::Styles::Child | Win32::Styles::Visible | Win32::Styles::Border,
+				.Styles = Win32::Styles::Child | Win32::Styles::Visible | Win32::Styles::Border | Win32::Styles::Static::Right,
 				.X = VX,
 				.Y = VY,
 				.Width = VWidth,

@@ -59,6 +59,7 @@ export namespace Win32
 		::NONCLIENTMETRICS,
 		::HFONT,
 		::WORD,
+		::CreateFontW,
 		::SetFocus,
 		::MessageBoxA,
 		::MessageBoxW,
@@ -133,6 +134,55 @@ export namespace Win32
 	constexpr auto Gwlp_UserData = GWLP_USERDATA;
 	constexpr auto CwUseDefault = CW_USEDEFAULT;
 	constexpr auto SpiGetNonClientMetrics = SPI_GETNONCLIENTMETRICS;
+	constexpr auto DefaultCharset = DEFAULT_CHARSET;
+
+	namespace OutPrecision
+	{
+		enum
+		{
+			OutOutlinePrecision = OUT_OUTLINE_PRECIS
+		};
+	}
+
+	namespace ClipPrecision
+	{
+		enum
+		{
+			DefaultPrecision = CLIP_DEFAULT_PRECIS
+		};
+	}
+
+	namespace FontQuality
+	{
+		enum
+		{
+			ClearType = CLEARTYPE_QUALITY
+		};
+	}
+
+	namespace Pitch
+	{
+		enum
+		{
+			Variable = VARIABLE_PITCH
+		};
+	}
+
+	namespace FontFamily
+	{
+		enum
+		{
+			Swiss = FF_SWISS
+		};
+	}
+
+	namespace FontWeight
+	{
+		enum
+		{
+			Normal = FW_NORMAL
+		};
+	}
 
 	namespace InitCommonControlsFlag
 	{
@@ -266,10 +316,11 @@ export namespace Win32
 
 	namespace WindowStyles
 	{
-		enum
+		enum : Win32::DWORD
 		{
 			WsOverlappedWindow = WS_OVERLAPPEDWINDOW,
-			WindowEdge = WS_EX_WINDOWEDGE
+			WindowEdge = WS_EX_WINDOWEDGE,
+			ThickFrame = WS_THICKFRAME
 		};
 	}
 
@@ -291,6 +342,14 @@ export namespace Win32
 			AutoCheckBox = BS_AUTOCHECKBOX,
 			PushLike = BS_PUSHLIKE
 		};
+
+		namespace Static
+		{
+			enum
+			{
+				Right = SS_RIGHT
+			};
+		}
 	}
 
 	constexpr Win32Constant<IDI_APPLICATION> IdiApplication;

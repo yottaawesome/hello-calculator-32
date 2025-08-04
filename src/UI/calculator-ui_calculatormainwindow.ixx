@@ -13,8 +13,8 @@ export namespace UI
 {
 	constexpr auto ButtonWidth = 100;
 	constexpr auto ButtonHeight = 50;
-	constexpr auto StartX = 50;
-	constexpr auto StartY = 50;
+	constexpr auto StartX = 15;
+	constexpr auto StartY = 15;
 	constexpr auto RowWidth = ButtonWidth * 4;
 
 	// 1st row
@@ -178,9 +178,10 @@ export namespace UI
 		{
 			return {
 				.WindowName = L"Win32 Calculator",
-				.Style = Win32::WindowStyles::WsOverlappedWindow,
-				.Width = 500,
-				.Height = 500
+				// disable resize
+				.Style = Win32::WindowStyles::WsOverlappedWindow & ~Win32::WindowStyles::ThickFrame,
+				.Width = 450,
+				.Height = 370
 			};
 		}
 
@@ -202,7 +203,12 @@ export namespace UI
 			self.SetFont(UI::SystemFont);
 			// Create child windows and set their font.
 			self.m_buttons.RunAll(
-				[&self](auto&& control)
+				[&self](OutputWindow& control)
+				{
+					control.Create(self.m_window.get());
+					control.SetFont(UI::SegoeFont);
+				},
+				[&self](auto& control)
 				{
 					control.Create(self.m_window.get());
 					control.SetFont(UI::SystemFont);
