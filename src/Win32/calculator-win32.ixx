@@ -283,7 +283,9 @@ export namespace Win32
 			Separator = VK_SEPARATOR,
 			Subtract = VK_SUBTRACT,
 			Decimal = VK_DECIMAL,
-			Divide = VK_DIVIDE
+			Divide = VK_DIVIDE,
+			NumpadEnter = VK_RETURN,
+			Delete = VK_DELETE
 		};
 	}
 

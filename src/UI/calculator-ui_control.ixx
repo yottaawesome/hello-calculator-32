@@ -25,7 +25,7 @@ export namespace UI
 
 	struct Control : Window
 	{
-		Control() = default;
+		constexpr Control() = default;
 		Control(ControlProperties properties) : m_properties(properties) {}
 
 		auto Create(this auto&& self, Win32::HWND parent) -> void
@@ -70,10 +70,12 @@ export namespace UI
 			//Log::Info("Control {:X} {:X}", msg, wParam);
 			if (msg == Win32::Messages::LeftButtonUp)
 				return self.Process(Win32Message<Win32::Messages::LeftButtonUp>{ hwnd, wParam, lParam });
+			if (msg == Win32::Messages::Paint)
+				return self.Process(Win32Message<Win32::Messages::Paint>{ hwnd, wParam, lParam });
 			return self.Process(GenericWin32Message{ .Hwnd = hwnd, .uMsg = msg, .wParam = wParam, .lParam = lParam });
 		}
 
-		auto Process(this Control& self, auto&& msg) -> Win32::LRESULT
+		auto Process(this Control& self, auto msg) noexcept -> Win32::LRESULT
 		{
 			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
 		}
@@ -167,10 +169,16 @@ export namespace UI
 				.Height = 50
 			};
 		};
+
+		void Click(this auto&& self) noexcept
+		{
+			if (self.GetHandle())
+				Win32::SendMessageW(self.GetHandle(), Win32::Messages::ButtonClick, 0, 0);
+		}
 	};
 
-	template<unsigned VValue, unsigned VId, int VX, int VY, int VWidth, int VHeight>
-	struct NumberButton : Button, Textable
+	template<unsigned VValue, unsigned VId, int VX, int VY, int VWidth, int VHeight, unsigned VKeyCode>
+	struct NumberButton : Button, Textable, KeyBindable<VKeyCode>
 	{
 		using Button::Process;
 
@@ -214,8 +222,8 @@ export namespace UI
 		};
 	};
 
-	template<String::FixedString VText, unsigned VId, int VX, int VY, int VWidth, int VHeight>
-	struct OperationButton : Button
+	template<String::FixedString VText, unsigned VId, int VX, int VY, int VWidth, int VHeight, unsigned VKeyCode>
+	struct OperationButton : Button, KeyBindable<VKeyCode>
 	{
 		using Control::Process;
 

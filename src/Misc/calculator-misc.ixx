@@ -28,14 +28,25 @@ export namespace Misc
 
 		constexpr void Find(this auto&& self, auto&& filterFn, auto&&...invocable)
 		{
-			static_assert((std::invocable<decltype(filterFn), TTypes> and ...), "The filter function must be invocable with all types in the sequence.");
+			static_assert((std::invocable<decltype(filterFn), TTypes> or ...), "The filter function must be invocable with at least one type in the sequence.");
+			static_assert(sizeof...(invocable) > 0, "You must pass at least one invocable.");
 			[]<typename...TArgs>(std::tuple<TArgs...>& tuple, auto&& filterFn, auto&&...invocable)
 			{
+				// Returns false if the filter function cannot be invoked on the 
+				// tuple element type, or the overload does not accept the tuple
+				// element type. This allows client code to specify filter and
+				// and invocable functions with only what they care about.
 				Overload overload{ std::forward<decltype(invocable)>(invocable)... };
-				((std::invoke(filterFn, std::get<TArgs>(tuple)) 
-					? (std::invoke(overload, std::get<TArgs>(tuple)), true)
-					: false
-				) or ...);
+				([&filterFn, &overload, &tuple]<typename TArg = TArgs>
+				{
+					if constexpr (not std::invocable<decltype(filterFn), TArg>) 
+						return false;
+					else if constexpr (not std::invocable<decltype(overload), decltype(std::get<TArg>(tuple))>)
+						return false;
+					else return std::invoke(filterFn, std::get<TArg>(tuple))
+						? (std::invoke(overload, std::get<TArg>(tuple)), true)
+						: false;
+				}() or ...);
 			}(self.AllTypes, std::forward<decltype(filterFn)>(filterFn), std::forward<decltype(invocable)>(invocable)...);
 		}
 

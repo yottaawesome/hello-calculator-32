@@ -4,6 +4,12 @@ import :win32;
 
 export namespace UI
 {
+	template<unsigned VVirtualKeyCode>
+	struct KeyBindable
+	{
+		constexpr auto KeyCode(this auto&&) noexcept -> unsigned { return VVirtualKeyCode; }
+	};
+
 	struct Textable
 	{
 		auto GetText(this const auto& self) -> std::wstring
