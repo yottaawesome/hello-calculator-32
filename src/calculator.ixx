@@ -6,16 +6,17 @@ export import :win32;
 export import :error;
 export import :raii;
 export import :string;
+export import :log;
+export import :misc;
+export import :math;
+export import :build;
 export import :ui_toplevelwindow;
 export import :ui_calculatormainwindow;
 export import :ui_control;
 export import :ui_common;
 export import :ui_font;
-export import :log;
+export import :ui_calculatorcontrols;
 export import :ui_capability;
-export import :misc;
-export import :math;
-export import :build;
 
 import std;
 

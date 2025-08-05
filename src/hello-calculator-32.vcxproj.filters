@@ -60,5 +60,8 @@
     <ClCompile Include="Build\calculator-build.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UI\calculator-ui_calculatorcontrols.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
