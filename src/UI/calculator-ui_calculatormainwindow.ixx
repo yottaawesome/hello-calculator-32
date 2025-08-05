@@ -21,6 +21,24 @@ export namespace UI
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
 		}
 
+		auto Process(this auto&& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
+		{
+			self.m_buttons.Find(
+				[keyCode = message.wParam](const KeyCodeButton auto& btn) -> bool
+				{
+					return keyCode == btn.KeyCode();
+				},
+				[](const KeyCodeButton auto& btn)
+				{
+					Log::Info("Keystroke virtual key code: {}", btn.KeyCode());
+					btn.Click();
+				}
+			);
+			// Focus needs to be set back to the window, because it goes to the button
+			self.TakeFocus();
+			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
+		}
+
 		auto Clicked(this auto&& self, NumberInput auto& btn)
 		{
 			self.m_buttons.GetByType<OutputWindow>().AppendText(btn.ValueString());
@@ -101,31 +119,8 @@ export namespace UI
 		auto Process(this auto&& self, Win32Message<Win32::Messages::Command> message) -> Win32::LRESULT
 		{
 			self.m_buttons.Find(
-				[id = Win32::LoWord(message.wParam)](auto&& control) { return control.GetId() == id; },
-				[&self](NumberInput auto& btn) { self.Clicked(btn); },
-				[&self](OperatorInput auto& btn) { self.Clicked(btn); },
-				[&self](ButtonEquals& btn) { self.Clicked(btn); },
-				[&self](ButtonDecimal& btn) { self.Clicked(btn); },
-				[&self](ButtonClear& btn) { self.Clicked(btn); },
-				[](auto& control) { Log::Info("Other"); }
-			);
-			// Focus needs to be set back to the window, because it goes to the button
-			self.TakeFocus();
-			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
-		}
-
-		auto Process(this auto&& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
-		{
-			self.m_buttons.Find(
-				[keyCode = message.wParam](const KeyCodeButton auto& btn) -> bool
-				{
-					return keyCode == btn.KeyCode(); 
-				},
-				[](const KeyCodeButton auto& btn)
-				{
-					Log::Info("Keystroke virtual key code: {}", btn.KeyCode());
-					btn.Click();
-				}
+				[id = Win32::LoWord(message.wParam)](AnyButton auto&& control) { return control.GetId() == id; },
+				[&self](AnyButton auto&& btn) { self.Clicked(btn); }
 			);
 			// Focus needs to be set back to the window, because it goes to the button
 			self.TakeFocus();

@@ -68,13 +68,16 @@ export namespace UI
 	template<typename T>
 	concept OperatorInput = Misc::OneOf<T, ButtonPlus, ButtonMinus, ButtonTimes, ButtonDivide>;
 
-	// This is just a sanity check.
-	static_assert(NumberInput<Button0>, "Expected Button0 to conform to NumberInput.");
-
 	template<typename T>
 	concept KeyCodeButton = requires(T t)
 	{
-		requires std::derived_from<T, Button>;
+		requires std::derived_from<std::remove_cvref_t<T>, Button>;
 		{ t.KeyCode() } -> std::convertible_to<unsigned>;
 	};
+
+	template<typename T>
+	concept AnyButton = std::derived_from<std::remove_cvref_t<T>, Button>;
+
+	// This is just a sanity check.
+	static_assert(NumberInput<Button0>, "Expected Button0 to conform to NumberInput.");
 }
