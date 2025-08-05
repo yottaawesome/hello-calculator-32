@@ -20,7 +20,7 @@ Five C++ features form the backbone of this implementation.
 4. **Generic lambas and functions**: generic lambdas remain one of the most useful additions to C++ and are essential in generic code.
 5. **Concepts:** these are extremely useful for dealing with a set of distinct types in generic way. E.g., you may wish to run some logic only on buttons (which are parameterized types); a concept can constrain the acceptable types to a function or lambda, avoiding things like extensive `if constexpr` statements.
 
-You'll notice a console window is displayed alongside the GUI window when the calculator runs; this is simply used for logging and debugging purposes.
+You'll notice a console window is displayed alongside the GUI window when the calculator runs; this is simply used in the `Debug` and `Instrumented` builds for logging and debugging purposes. It's suppressed in the `Release` build.
 
 ## Building
 

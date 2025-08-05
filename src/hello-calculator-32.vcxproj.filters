@@ -57,5 +57,8 @@
     <ClCompile Include="Math\calculator-math.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Build\calculator-build.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

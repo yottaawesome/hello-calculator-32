@@ -3,14 +3,6 @@ import std;
 
 export namespace Misc
 {
-	constexpr bool IsDebug =
-#ifdef _DEBUG
-		true;
-#else
-		false;
-#endif
-	constexpr bool IsRelease = not IsDebug;
-
 	template<typename...Ts>
 	struct Overload : Ts...
 	{

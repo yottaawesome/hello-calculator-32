@@ -15,6 +15,7 @@ export import :log;
 export import :ui_capability;
 export import :misc;
 export import :math;
+export import :build;
 
 import std;
 
