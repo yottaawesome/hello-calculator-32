@@ -14,14 +14,14 @@ export namespace UI
 {
 	struct CalculatorMainWindow : TopLevelWindow
 	{
-		using TopLevelWindow::Process;
+		using TopLevelWindow::OnMessage;
 
-		auto Process(this auto&& self, Win32Message<Win32::Messages::Paint> message) -> Win32::LRESULT
+		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::Paint> message) -> Win32::LRESULT
 		{
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
 		}
 
-		auto Process(this auto&& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
+		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
 		{
 			self.m_buttons.Find(
 				[keyCode = message.wParam](const KeyCodeButton auto& btn) -> bool
@@ -33,6 +33,17 @@ export namespace UI
 					Log::Info("Keystroke virtual key code: {}", btn.KeyCode());
 					btn.Click();
 				}
+			);
+			// Focus needs to be set back to the window, because it goes to the button
+			self.TakeFocus();
+			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
+		}
+
+		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::Command> message) -> Win32::LRESULT
+		{
+			self.m_buttons.Find(
+				[id = Win32::LoWord(message.wParam)](AnyButton auto&& control) { return control.GetId() == id; },
+				[&self](AnyButton auto&& btn) { self.Clicked(btn); }
 			);
 			// Focus needs to be set back to the window, because it goes to the button
 			self.TakeFocus();
@@ -114,17 +125,6 @@ export namespace UI
 		{
 			self.m_buttons.GetByType<OutputWindow>().ClearText();
 			self.m_calculator.Clear();
-		}
-
-		auto Process(this auto&& self, Win32Message<Win32::Messages::Command> message) -> Win32::LRESULT
-		{
-			self.m_buttons.Find(
-				[id = Win32::LoWord(message.wParam)](AnyButton auto&& control) { return control.GetId() == id; },
-				[&self](AnyButton auto&& btn) { self.Clicked(btn); }
-			);
-			// Focus needs to be set back to the window, because it goes to the button
-			self.TakeFocus();
-			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
 		}
 
 		auto ClassName(this const auto&) noexcept -> std::wstring_view { return L"Calculator-Gui"; }

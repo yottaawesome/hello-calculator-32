@@ -126,16 +126,16 @@ export namespace UI
 				Win32::LRESULT result = 0;
 				bool handled = ((
 					std::get<Is>(HandledMessages) == msgType 
-						? (result = self.Process(Win32Message<std::get<Is>(HandledMessages)>{ hwnd, wParam, lParam }), true)
+						? (result = self.OnMessage(Win32Message<std::get<Is>(HandledMessages)>{ hwnd, wParam, lParam }), true)
 						: false
 				) or ...);
-				return handled ? result : self.Process(GenericWin32Message{ hwnd, msgType, wParam, lParam });
+				return handled ? result : self.OnMessage(GenericWin32Message{ hwnd, msgType, wParam, lParam });
 			}(std::make_index_sequence<HandledMessages.size()>());
 		}
 
 		//
 		// The generic message handler.
-		auto Process(this TopLevelWindow& self, auto&& args) noexcept -> Win32::LRESULT
+		auto OnMessage(this TopLevelWindow& self, auto&& args) noexcept -> Win32::LRESULT
 		{
 			if (args.uMsg == Win32::Messages::Destroy)
 			{
