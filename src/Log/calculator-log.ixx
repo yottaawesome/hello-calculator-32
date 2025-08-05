@@ -10,26 +10,24 @@ import :build;
 
 namespace
 {
+	template<bool VEnabled>
 	struct WindowsConsole
 	{
-		~WindowsConsole()
+		~WindowsConsole() noexcept requires VEnabled
 		{
-			if constexpr (Build::IsDebug)
-				Win32::FreeConsole();
+			Win32::FreeConsole();
 		}
 
-		WindowsConsole()
+		WindowsConsole() noexcept requires VEnabled
 		{
-			if constexpr (Build::IsDebug)
-			{
-				Win32::AllocConsole();
-				FILE* fDummy;
-				freopen_s(&fDummy, "CONIN$", "r", stdin);
-				freopen_s(&fDummy, "CONOUT$", "w", stderr);
-				freopen_s(&fDummy, "CONOUT$", "w", stdout);
-			}
+			Win32::AllocConsole();
+			FILE* fDummy;
+			freopen_s(&fDummy, "CONIN$", "r", stdin);
+			freopen_s(&fDummy, "CONOUT$", "w", stderr);
+			freopen_s(&fDummy, "CONOUT$", "w", stdout);
 		}
-	} Console;
+	};
+	WindowsConsole<Build::IsDebug> Console;
 }
 
 export namespace Log
