@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The aim of this repo is to explore interacting with Win32 GUI objects using some ideas from type-oriented programming. A rudimentary calculator is built using these techniques.
+The aim of this repo is to explore interacting with Win32 GUI objects using ideas from type-oriented and declarative programming. A rudimentary calculator is built using these techniques.
 
 ## Rationale
 
