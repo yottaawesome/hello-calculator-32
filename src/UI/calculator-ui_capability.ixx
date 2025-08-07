@@ -19,9 +19,8 @@ export namespace UI
 				return {};
 			std::wstring buffer(Win32::GetWindowTextLengthW(handle)+1, '\0');
 			Win32::GetWindowTextW(self.GetHandle(), buffer.data(), static_cast<int>(buffer.size()));
-			if (not buffer.empty()) // Remove trailing null character.
-				buffer.pop_back();
-			return buffer;
+			// Remove trailing null character.
+			return buffer.empty() ? buffer : (buffer.pop_back(), buffer);
 		}
 
 		auto SetText(this auto&& self, std::wstring_view text)
