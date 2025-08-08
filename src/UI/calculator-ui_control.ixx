@@ -148,10 +148,10 @@ export namespace UI
 			return L"Button";
 		}
 
-		auto OnMessage(this auto& self, Win32Message<Win32::Messages::LeftButtonUp> msg) -> Win32::LRESULT
-			requires requires { self.OnClick(); }
+		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp> msg) -> Win32::LRESULT
 		{
-			self.OnClick();
+			if constexpr (requires { self.OnClick(); })
+				self.OnClick();
 			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
 		}
 
@@ -191,10 +191,6 @@ export namespace UI
 
 		auto GetSubclassId(this auto&) noexcept { return VId; }
 
-		void OnClick(this auto& self) 
-		{
-		}
-
 		constexpr auto Value(this const auto&) noexcept -> unsigned
 		{
 			return VValue;
@@ -229,7 +225,7 @@ export namespace UI
 
 		OperationButton() : Button(GetDefaultProperties()) {}
 		
-		auto GetSubclassId(this auto&) noexcept { return VId; }
+		auto GetSubclassId(this auto&&) noexcept { return VId; }
 
 		auto GetDefaultProperties(this const auto&) -> ControlProperties
 		{
