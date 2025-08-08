@@ -23,6 +23,11 @@ export namespace UI
 		int Height = 0;
 	};
 
+	constexpr std::array HandledControlMessages{
+		Win32::Messages::LeftButtonUp,
+		Win32::Messages::Paint
+	};
+
 	struct Control : Window
 	{
 		constexpr Control() = default;
@@ -67,12 +72,16 @@ export namespace UI
 			Win32::DWORD_PTR dwRefData
 		) -> Win32::LRESULT
 		{
-			//Log::Info("Control {:X} {:X}", msg, wParam);
-			if (msg == Win32::Messages::LeftButtonUp)
-				return self.OnMessage(Win32Message<Win32::Messages::LeftButtonUp>{ hwnd, wParam, lParam });
-			if (msg == Win32::Messages::Paint)
-				return self.OnMessage(Win32Message<Win32::Messages::Paint>{ hwnd, wParam, lParam });
-			return self.OnMessage(GenericWin32Message{ .Hwnd = hwnd, .uMsg = msg, .wParam = wParam, .lParam = lParam });
+			return [&self, hwnd, msg, wParam, lParam]<size_t...Is>(std::index_sequence<Is...>)
+			{
+				Win32::LRESULT result = 0;
+				bool handled = ((
+					std::get<Is>(HandledControlMessages) == msg
+						? (result = self.OnMessage(Win32Message<std::get<Is>(HandledControlMessages)>{ hwnd, wParam, lParam }), true)
+						: false
+				) or ...);
+				return handled ? result : self.OnMessage(GenericWin32Message{ .Hwnd = hwnd, .uMsg = msg, .wParam = wParam, .lParam = lParam });
+			}(std::make_index_sequence<HandledControlMessages.size()>());
 		}
 
 		auto OnMessage(this Control& self, auto msg) noexcept -> Win32::LRESULT
