@@ -129,7 +129,7 @@ export namespace UI
 
 		auto ClassName(this const auto&) noexcept -> std::wstring_view { return L"Calculator-Gui"; }
 
-		auto CreateArgs(this const auto&) -> CreateWindowArgs
+		auto GetCreationArgs(this const auto&) -> CreateWindowArgs
 		{
 			return {
 				.WindowName = L"Win32 Calculator",

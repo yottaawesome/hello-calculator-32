@@ -18,14 +18,14 @@ export namespace UI
 		auto Create(this auto&& self) -> decltype(auto)
 		{
 			static bool done =
-				[&self]
+				[&self]<typename T = std::remove_cvref_t<decltype(self)>>
 				{
 					Win32::WNDCLASSEXW wndClass = self.GetClass();
-					wndClass.lpfnWndProc = WindowProc<std::remove_cvref_t<decltype(self)>>;
+					wndClass.lpfnWndProc = WindowProc<T>;
 					return Win32::RegisterClassExW(&wndClass) ? true : throw Error::Win32Error{};
 				}();
 
-			CreateWindowArgs args = self.CreateArgs();
+			CreateWindowArgs args = self.GetCreationArgs();
 			Win32::HWND hwnd = Win32::CreateWindowExW(
 				args.ExtendedStyle,
 				self.ClassName().data(),
