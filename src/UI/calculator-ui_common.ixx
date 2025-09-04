@@ -33,7 +33,7 @@ export namespace UI
 		Win32::HWND Hwnd = nullptr;
 		Win32::WPARAM wParam = 0;
 		Win32::LPARAM lParam = 0;
-		auto operator==(this const auto&, std::uint32_t msg) noexcept -> bool 
+		auto operator==(this auto&&, std::uint32_t msg) noexcept -> bool 
 		{ 
 			return VMsg == msg; 
 		}

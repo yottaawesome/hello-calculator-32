@@ -252,7 +252,12 @@ export namespace Win32
 			CustomDraw = NM_CUSTOMDRAW,
 			SetFont = WM_SETFONT,
 			ButtonClick = BM_CLICK,
-			ButtonClicked = BN_CLICKED
+			ButtonClicked = BN_CLICKED,
+			DrawItem = WM_DRAWITEM,
+			MouseHover = WM_MOUSEHOVER,
+			MouseLeave = WM_MOUSELEAVE,
+			MouseMove = WM_MOUSEMOVE,
+			EraseBackground = WM_ERASEBKGND
 		};
 	}
 

@@ -7,9 +7,14 @@ import :string;
 import :log;
 import :ui_capability;
 
+template<typename T>
+concept Handles2 = requires(T t) { t.Poo(); };
+
 // Controls
 export namespace UI
 {
+	
+
 	struct ControlProperties
 	{
 		Win32::DWORD Id;
@@ -25,31 +30,38 @@ export namespace UI
 
 	constexpr std::array HandledControlMessages{
 		Win32::Messages::LeftButtonUp,
-		Win32::Messages::Paint
+		Win32::Messages::Paint,
+		Win32::Messages::Notify,
+		Win32::Messages::DrawItem,
+		Win32::Messages::MouseHover,
+		Win32::Messages::MouseLeave,
+		Win32::Messages::MouseMove,
+		Win32::Messages::EraseBackground,
+		Win32::Messages::Create
 	};
 
 	struct Control : Window
 	{
 		constexpr Control() = default;
-		Control(ControlProperties properties) : m_properties(properties) {}
 
 		auto Create(this auto&& self, Win32::HWND parent) -> void
 		{
 			static_assert(
-				requires { { self.GetClass().data() } -> std::same_as<const wchar_t*>; }, 
-				"This type needs a GetClass() member that returns a wstring or wstring_view!");
+				requires { { self.ClassName.data() } -> std::same_as<const wchar_t*>; }, 
+				"This type needs a ClassName member that returns a wstring or wstring_view!");
 			
+			auto properties = self.GetDefaultProperties();
 			Win32::HWND window = Win32::CreateWindowExW(
-				self.m_properties.ExtendedStyles,
-				self.GetClass().data(),
-				self.m_properties.Text.empty() ? nullptr : self.m_properties.Text.data(),
-				self.m_properties.Styles,
-				self.m_properties.X,
-				self.m_properties.Y,
-				self.m_properties.Width,
-				self.m_properties.Height,
+				properties.ExtendedStyles,
+				self.ClassName.data(),
+				properties.Text.empty() ? nullptr : properties.Text.data(),
+				properties.Styles,
+				properties.X,
+				properties.Y,
+				properties.Width,
+				properties.Height,
 				parent,
-				(Win32::HMENU)(Win32::UINT_PTR)(self.m_properties.Id),
+				(Win32::HMENU)(Win32::UINT_PTR)(properties.Id),
 				Win32::GetModuleHandleW(nullptr),
 				nullptr
 			);
@@ -65,28 +77,41 @@ export namespace UI
 		auto HandleMessage(
 			this auto&& self,
 			Win32::HWND hwnd,
-			Win32::UINT msg,
+			Win32::UINT msgType,
 			Win32::WPARAM wParam,
 			Win32::LPARAM lParam,
 			Win32::UINT_PTR uIdSubclass,
 			Win32::DWORD_PTR dwRefData
 		) -> Win32::LRESULT
 		{
-			return [&self, hwnd, msg, wParam, lParam]<size_t...Is>(std::index_sequence<Is...>)
+			return[&self, hwnd, msgType, wParam, lParam]<size_t...Is>(std::index_sequence<Is...>)
 			{
-				Win32::LRESULT result = 0;
-				bool handled = ((
-					std::get<Is>(HandledControlMessages) == msg
-						? (result = self.OnMessage(Win32Message<std::get<Is>(HandledControlMessages)>{ hwnd, wParam, lParam }), true)
-						: false
-				) or ...);
-				return handled ? result : self.OnMessage(GenericWin32Message{ .Hwnd = hwnd, .uMsg = msg, .wParam = wParam, .lParam = lParam });
+				Win32::LRESULT result;
+				// MSVC BUG NOTE
+				// CAPTURING SELF IN THE CAPTURE CLAUSE CAUSES THE CONCEPT EVALUATION TO ALWAYS BE TRUE,
+				// NO MATTER WHAT THE CONCEPT ACTUALLY IS, THUS CAUSING A COMPILE ERROR WHERE IT SHOULD 
+				// BE FINE. IT'S NOT CLEAR WHY, BECAUSE SIMILAR CODE WORKS FINE IN THE  WIN32-EXPERIMENTS
+				// REPO. THIS IS IS BECAUSE MICROSOFT IS RETARDED AND CAN'T FIX THEIR FUCKING COMPILER.
+				// THIS IS A REMINDER TO MAKE A MINIMAL REPRODUCIBLE SAMPLE OF THIS BUG AND REPORT IT TO
+				// THE TWATS AT MICROSOFT, SO THEY CAN IGNORE IT ALONG THE OTHER CONSTEXPR BUGS I'VE
+				// REPORTED.
+				// END MSVC BUG NOTE
+				bool handled = (... or
+					[&result, msgType]<Win32::DWORD VRawMsgType>(auto&& self, Win32Message<VRawMsgType> msg)
+					{
+						//if constexpr (requires { self.On(winMsg); }) // doesn't work
+						//if constexpr (requires { self.OnMessage(Win32Message<VRawMsgType>{}); })
+						if constexpr (Handles<decltype(self), std::remove_cvref_t<decltype(msg)>>)
+						{
+							return msg == msgType ? (result = self.OnMessage(msg), true) : false;
+						}
+						else
+						{
+							return false;
+						}
+					}(self, Win32Message<std::get<Is>(HandledControlMessages)>{ hwnd, wParam, lParam }));
+				return handled ? result : Win32::DefSubclassProc(hwnd, msgType, wParam, lParam);
 			}(std::make_index_sequence<HandledControlMessages.size()>());
-		}
-
-		auto OnMessage(this Control& self, auto msg) noexcept -> Win32::LRESULT
-		{
-			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
 		}
 
 		template<typename TControl>
@@ -105,20 +130,13 @@ export namespace UI
 				: Win32::DefSubclassProc(hwnd, msg, wParam, lParam);
 		}
 
-		auto GetId(this const auto& self) noexcept -> unsigned { return self.m_properties.Id; }
-
-	protected:
-		ControlProperties m_properties;
+		auto GetId(this auto&& self) noexcept -> unsigned { return self.GetDefaultProperties().Id; }
 	};
 
 	template<unsigned VId, int VX, int VY, int VWidth, int VHeight>
 	struct Output : Control, Textable
 	{
-		using Control::OnMessage;
-
-		Output() : Control(GetDefaultProperties()) {}
-
-		auto GetSubclassId(this const auto&) noexcept -> unsigned 
+		auto GetSubclassId(this auto&&) noexcept -> unsigned 
 		{ 
 			return VId; 
 		}
@@ -136,26 +154,12 @@ export namespace UI
 			};
 		};
 
-		auto GetClass(this auto&&) noexcept -> std::wstring_view
-		{
-			return L"Static";
-		}
+		constexpr static std::wstring_view ClassName = L"Static";
 	};
 
 	struct Button : Control
 	{
-		using Control::OnMessage;
-
-		Button() : Control(GetDefaultProperties()) {}
-
-		Button(ControlProperties properties)
-			: Control(properties)
-		{ }
-
-		constexpr auto GetClass(this auto&&) noexcept -> std::wstring_view
-		{
-			return L"Button";
-		}
+		constexpr static std::wstring_view ClassName = L"Button";
 
 		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp> msg) -> Win32::LRESULT
 		{
@@ -189,15 +193,6 @@ export namespace UI
 	template<unsigned VValue, unsigned VId, int VX, int VY, int VWidth, int VHeight, unsigned VKeyCode>
 	struct NumberButton : Button, Textable, KeyBindable<VKeyCode>
 	{
-		using Button::OnMessage;
-
-		NumberButton() : Button(GetDefaultProperties()) {}
-
-		NumberButton(std::move_only_function<auto()->void> f) 
-			: Button(GetDefaultProperties()),
-			Clicked(std::move(f))
-		{}
-
 		auto GetSubclassId(this auto&) noexcept { return VId; }
 
 		constexpr auto Value(this const auto&) noexcept -> unsigned
@@ -209,8 +204,6 @@ export namespace UI
 		{
 			return std::to_wstring(VValue);
 		}
-
-		std::function<auto()->void> Clicked = [] {};
 
 		auto GetDefaultProperties(this auto&& self) -> ControlProperties
 		{
@@ -230,10 +223,6 @@ export namespace UI
 	template<String::FixedString VText, unsigned VId, int VX, int VY, int VWidth, int VHeight, unsigned VKeyCode>
 	struct OperationButton : Button, KeyBindable<VKeyCode>
 	{
-		using Control::OnMessage;
-
-		OperationButton() : Button(GetDefaultProperties()) {}
-		
 		auto GetSubclassId(this auto&&) noexcept { return VId; }
 
 		auto GetDefaultProperties(this const auto&) -> ControlProperties

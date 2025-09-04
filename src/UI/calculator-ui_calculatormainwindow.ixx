@@ -125,9 +125,9 @@ export namespace UI
 			self.m_calculator.Clear();
 		}
 
-		auto ClassName(this const auto&) noexcept -> std::wstring_view { return L"Calculator-Gui"; }
+		auto ClassName(this auto&&) noexcept -> std::wstring_view { return L"Calculator-Gui"; }
 
-		auto GetCreationArgs(this const auto&) -> CreateWindowArgs
+		auto GetCreationArgs(this auto&&) -> CreateWindowArgs
 		{
 			return {
 				.WindowName = L"Win32 Calculator",
@@ -138,7 +138,7 @@ export namespace UI
 			};
 		}
 
-		auto GetClass(this const auto& self) noexcept -> Win32::WNDCLASSEXW
+		auto GetClass(this auto&& self) noexcept -> Win32::WNDCLASSEXW
 		{
 			return Win32::WNDCLASSEXW{
 				.cbSize = sizeof(Win32::WNDCLASSEXW),
