@@ -5,6 +5,12 @@ import :raii;
 
 export namespace UI
 {
+	template<typename T, typename M>
+	concept Handles = requires(T t, M m)
+	{
+		{ t.OnMessage(m) } -> std::convertible_to<Win32::LRESULT>;
+	};
+
 	struct CreateWindowArgs
 	{
 		Win32::PCWSTR WindowName = nullptr;

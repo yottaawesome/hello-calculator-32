@@ -14,8 +14,6 @@ export namespace UI
 {
 	struct CalculatorMainWindow : TopLevelWindow
 	{
-		using TopLevelWindow::OnMessage;
-
 		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::Paint> message) -> Win32::LRESULT
 		{
 			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);

@@ -121,28 +121,22 @@ export namespace UI
 			Win32::LPARAM lParam
 		) -> Win32::LRESULT
 		{
-			return [&self, hwnd, msgType, wParam, lParam]<size_t...Is>(std::index_sequence<Is...>)
+			return[&self, hwnd, msgType, wParam, lParam]<size_t...Is>(std::index_sequence<Is...>)
 			{
-				Win32::LRESULT result = 0;
-				bool handled = ((
-					std::get<Is>(HandledMessages) == msgType 
-						? (result = self.OnMessage(Win32Message<std::get<Is>(HandledMessages)>{ hwnd, wParam, lParam }), true)
-						: false
-				) or ...);
-				return handled ? result : self.OnMessage(GenericWin32Message{ hwnd, msgType, wParam, lParam });
+				Win32::LRESULT result;
+				bool handled = (... or
+					[=, &self, &result]<typename TMsg = Win32Message<std::get<Is>(HandledMessages)>>()
+					{
+						if constexpr (Handles<decltype(self), TMsg>)
+							return TMsg::uMsg == msgType ? (result = self.OnMessage(TMsg{ hwnd, wParam, lParam }), true) : false;
+						return false;
+					}());
+				if (handled)
+					return result;
+				return msgType == Win32::Messages::Destroy
+					? (Win32::PostQuitMessage(0), 0)
+					: Win32::DefWindowProcW(hwnd, msgType, wParam, lParam);
 			}(std::make_index_sequence<HandledMessages.size()>());
-		}
-
-		//
-		// The generic message handler.
-		auto OnMessage(this TopLevelWindow& self, auto&& args) noexcept -> Win32::LRESULT
-		{
-			if (args.uMsg == Win32::Messages::Destroy)
-			{
-				Win32::PostQuitMessage(0);
-				return 0;
-			}
-			return Win32::DefWindowProcW(args.Hwnd, args.uMsg, args.wParam, args.lParam);
 		}
 	};
 }
