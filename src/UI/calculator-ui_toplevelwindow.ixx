@@ -17,12 +17,19 @@ export namespace UI
 		// Creates the window.
 		auto Create(this auto&& self) -> decltype(auto)
 		{
-			static bool done =
-				[&self]<typename T = std::remove_cvref_t<decltype(self)>>
+			static bool registered =
+				[&self]<typename T = std::remove_cvref_t<decltype(self)>>()
 				{
 					Win32::WNDCLASSEXW wndClass = self.GetClass();
 					wndClass.lpfnWndProc = WindowProc<T>;
-					return Win32::RegisterClassExW(&wndClass) ? true : throw Error::Win32Error{};
+					if (auto atom = Win32::RegisterClassExW(&wndClass); atom != 0)
+						return true;
+
+					const auto lastError = Win32::GetLastError();
+					if (lastError == Win32::ErrorCodes::ClassAlreadyExists)
+						return true;
+
+					throw Error::Win32Error(lastError, "RegisterClassExW failed.");
 				}();
 
 			CreateWindowArgs args = self.GetCreationArgs();
@@ -40,8 +47,13 @@ export namespace UI
 				Win32::GetModuleHandleW(nullptr),
 				&self
 			);
-			self.m_window = Raii::HwndUniquePtr(hwnd);
-			self.Init();
+			if (not hwnd)
+				throw Error::Win32Error(Win32::GetLastError(), "CreateWindowExW failed.");
+
+			// Ownership of hwnd is established in WM_NCCREATE. Do not reassign here.
+			if constexpr (requires { self.Init(); })
+				self.Init();
+
 			return std::forward<decltype(self)>(self);
 		}
 
@@ -64,7 +76,7 @@ export namespace UI
 				Win32::MSG msg{};
 				while (msg.message != Win32::Messages::Quit)
 				{
-					if (Win32::PeekMessageW(&msg, self.m_hwnd, 0, 0, Win32::PeekMessageOptions::Remove))
+					if (Win32::PeekMessageW(&msg, self.GetHandle(), 0, 0, Win32::PeekMessageOptions::Remove))
 					{
 						Win32::TranslateMessage(&msg);
 						Win32::DispatchMessageW(&msg);
@@ -82,7 +94,8 @@ export namespace UI
 			Win32::Messages::Destroy,
 			Win32::Messages::Paint,
 			Win32::Messages::KeyUp,
-			Win32::Messages::Command
+			Win32::Messages::Command,
+			Win32::Messages::NonClientDestroy
 		};
 
 		//
@@ -94,15 +107,25 @@ export namespace UI
 
 			if (uMsg == Win32::Messages::NonClientCreate)
 			{
-				Win32::CREATESTRUCT* pCreate = (Win32::CREATESTRUCT*)lParam;
-				pThis = (TWindow*)pCreate->lpCreateParams;
-				Win32::SetWindowLongPtrW(hwnd, Win32::Gwlp_UserData, (Win32::LONG_PTR)pThis);
+				auto* pCreate = reinterpret_cast<Win32::CREATESTRUCT*>(lParam);
+				pThis = reinterpret_cast<TWindow*>(pCreate->lpCreateParams);
+				Win32::SetWindowLongPtrW(hwnd, Win32::Gwlp_UserData, reinterpret_cast<Win32::LONG_PTR>(pThis));
 
+				// Adopt ownership once, during creation
 				pThis->m_window = Raii::HwndUniquePtr(hwnd);
 			}
 			else
 			{
-				pThis = (TWindow*)GetWindowLongPtrW(hwnd, Win32::Gwlp_UserData);
+				pThis = reinterpret_cast<TWindow*>(Win32::GetWindowLongPtrW(hwnd, Win32::Gwlp_UserData));
+
+				// Detach before the OS destroys the HWND to avoid double-destroy later.
+				// Caught by AI, more information here https://learn.microsoft.com/en-us/cpp/mfc/tn017-destroying-window-objects?view=msvc-170
+				// under the "Auto cleanup with CWnd::PostNcDestroy" header.
+				if (pThis and uMsg == Win32::Messages::NonClientDestroy)
+				{
+					Win32::SetWindowLongPtrW(hwnd, Win32::Gwlp_UserData, 0);
+					pThis->m_window.release();
+				}
 			}
 
 			return pThis
@@ -114,10 +137,10 @@ export namespace UI
 		// Called by WindowProc, which then dispatches the message to either the generic handler
 		// or specific handlers by subclasses.
 		auto HandleMessage(
-			this auto&& self, 
-			Win32::HWND hwnd, 
-			unsigned msgType, 
-			Win32::WPARAM wParam, 
+			this auto&& self,
+			Win32::HWND hwnd,
+			unsigned msgType,
+			Win32::WPARAM wParam,
 			Win32::LPARAM lParam
 		) -> Win32::LRESULT
 		{

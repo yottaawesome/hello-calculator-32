@@ -7,14 +7,9 @@ import :string;
 import :log;
 import :ui_capability;
 
-template<typename T>
-concept Handles2 = requires(T t) { t.Poo(); };
-
 // Controls
 export namespace UI
 {
-	
-
 	struct ControlProperties
 	{
 		Win32::DWORD Id;

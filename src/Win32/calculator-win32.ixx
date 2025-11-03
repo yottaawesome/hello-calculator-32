@@ -136,6 +136,14 @@ export namespace Win32
 	constexpr auto SpiGetNonClientMetrics = SPI_GETNONCLIENTMETRICS;
 	constexpr auto DefaultCharset = DEFAULT_CHARSET;
 
+	namespace ErrorCodes
+	{
+		enum
+		{
+			ClassAlreadyExists = ERROR_CLASS_ALREADY_EXISTS
+		};
+	}
+
 	namespace OutPrecision
 	{
 		enum
@@ -257,7 +265,8 @@ export namespace Win32
 			MouseHover = WM_MOUSEHOVER,
 			MouseLeave = WM_MOUSELEAVE,
 			MouseMove = WM_MOUSEMOVE,
-			EraseBackground = WM_ERASEBKGND
+			EraseBackground = WM_ERASEBKGND,
+			NonClientDestroy = WM_NCDESTROY
 		};
 	}
 
