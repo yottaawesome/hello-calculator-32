@@ -128,7 +128,8 @@ export namespace Win32
 		::GetWindowTextLengthW,
 		::GetClassInfoExA,
 		::GetClassInfoExW,
-		::UnregisterClassW
+		::UnregisterClassW,
+		::RemoveWindowSubclass
 		;
 
 	constexpr auto Gwlp_UserData = GWLP_USERDATA;

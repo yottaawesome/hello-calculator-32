@@ -39,7 +39,8 @@ export namespace UI
 	{
 		constexpr Control() = default;
 
-		auto Create(this auto&& self, Win32::HWND parent) -> void
+		// Require lvalue 'self' to ensure the address passed to refData remains valid.
+		auto Create(this auto& self, Win32::HWND parent) -> void
 		{
 			static_assert(
 				requires { { self.ClassName.data() } -> std::same_as<const wchar_t*>; }, 
@@ -60,10 +61,14 @@ export namespace UI
 				Win32::GetModuleHandleW(nullptr),
 				nullptr
 			);
+			if (not window)
+				throw Error::Win32Error(Win32::GetLastError(), "CreateWindowExW failed for control.");
+
 			if (self.m_window = Raii::HwndUniquePtr(window); not self.m_window)
-				throw Error::Win32Error(Win32::GetLastError(), "Failed creating button.");
+				throw Error::Win32Error(Win32::GetLastError(), "Failed to adopt control HWND.");
+
 			if (not Win32::SetWindowSubclass(self.m_window.get(), SubclassProc<std::remove_cvref_t<decltype(self)>>, self.GetSubclassId(), reinterpret_cast<Win32::DWORD_PTR>(&self)))
-				throw Error::Win32Error(Win32::GetLastError(), "Failed creating button.");
+				throw Error::Win32Error(Win32::GetLastError(), "SetWindowSubclass failed for control.");
 
 			if constexpr (requires { self.Init(); })
 				self.Init();
@@ -105,6 +110,11 @@ export namespace UI
 							return false;
 						}
 					}(self, Win32Message<std::get<Is>(HandledControlMessages)>{ hwnd, wParam, lParam }));
+
+				// Always unhook on WM_NCDESTROY to avoid stale subclass state/refData.
+				if (msgType == Win32::Messages::NonClientDestroy)
+					Win32::RemoveWindowSubclass(hwnd, SubclassProc<std::remove_cvref_t<decltype(self)>>, self.GetSubclassId());
+
 				return handled ? result : Win32::DefSubclassProc(hwnd, msgType, wParam, lParam);
 			}(std::make_index_sequence<HandledControlMessages.size()>());
 		}
@@ -126,6 +136,9 @@ export namespace UI
 		}
 
 		auto GetId(this auto&& self) noexcept -> unsigned { return self.GetDefaultProperties().Id; }
+
+		// Default subclass ID: reuse the control ID unless overridden by derived controls.
+		auto GetSubclassId(this auto&& self) noexcept -> unsigned { return self.GetId(); }
 	};
 
 	template<unsigned VId, int VX, int VY, int VWidth, int VHeight>
