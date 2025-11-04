@@ -49,7 +49,7 @@ export namespace UI
 	using ButtonClear =
 		OperationButton<L"CE", 115, StartX + ButtonWidth * 2, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight, Win32::VirtualKeyCodes::Delete>;
 	using ButtonDivide =
-		OperationButton<L"%", 116, StartX + ButtonWidth * 3, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight, Win32::VirtualKeyCodes::Divide>;
+		OperationButton<L"/", 116, StartX + ButtonWidth * 3, StartY + ButtonHeight * 4, ButtonWidth, ButtonHeight, Win32::VirtualKeyCodes::Divide>;
 	// 6th row
 	using ButtonEquals =
 		OperationButton<L"=", 117, StartX + ButtonWidth * 0, StartY + ButtonHeight * 5, RowWidth, ButtonHeight, Win32::VirtualKeyCodes::NumpadEnter>;
