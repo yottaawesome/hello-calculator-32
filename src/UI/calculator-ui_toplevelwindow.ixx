@@ -148,7 +148,7 @@ export namespace UI
 			{
 				Win32::LRESULT result;
 				bool handled = (... or
-					[=, &self, &result]<typename TMsg = Win32Message<std::get<Is>(HandledMessages)>>()
+					[=, &self, &result]<typename TMsg = Win32Message<HandledMessages[Is]>> // can also use std::get<Is>, which is more generic.
 					{
 						if constexpr (Handles<decltype(self), TMsg>)
 							return TMsg::uMsg == msgType ? (result = self.OnMessage(TMsg{ hwnd, wParam, lParam }), true) : false;
