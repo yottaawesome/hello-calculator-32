@@ -180,20 +180,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Build\calculator-build.ixx" />
-    <ClCompile Include="Error\calculator-error.ixx" />
-    <ClCompile Include="Log\calculator-log.ixx" />
-    <ClCompile Include="Math\calculator-math.ixx" />
-    <ClCompile Include="Misc\calculator-misc.ixx" />
-    <ClCompile Include="Raii\calculator-raii.ixx" />
-    <ClCompile Include="String\calculator-string.ixx" />
-    <ClCompile Include="UI\calculator-ui_calculatorcontrols.ixx" />
-    <ClCompile Include="UI\calculator-ui_capability.ixx" />
-    <ClCompile Include="UI\calculator-ui_font.ixx" />
-    <ClCompile Include="UI\calculator-ui_calculatormainwindow.ixx" />
-    <ClCompile Include="UI\calculator-ui_toplevelwindow.ixx" />
-    <ClCompile Include="UI\calculator-ui_common.ixx" />
-    <ClCompile Include="UI\calculator-ui_control.ixx" />
+    <ClCompile Include="Build\build.ixx" />
+    <ClCompile Include="Error\error.ixx" />
+    <ClCompile Include="Log\log.ixx" />
+    <ClCompile Include="Math\math.ixx" />
+    <ClCompile Include="Misc\misc.ixx" />
+    <ClCompile Include="Raii\raii.ixx" />
+    <ClCompile Include="String\string.ixx" />
+    <ClCompile Include="UI\ui.calculatorcontrols.ixx" />
+    <ClCompile Include="UI\ui.capability.ixx" />
+    <ClCompile Include="UI\ui.font.ixx" />
+    <ClCompile Include="UI\ui.calculatormainwindow.ixx" />
+    <ClCompile Include="UI\ui.ixx" />
+    <ClCompile Include="UI\ui.toplevelwindow.ixx" />
+    <ClCompile Include="UI\ui.common.ixx" />
+    <ClCompile Include="UI\ui.control.ixx" />
     <ClCompile Include="calculator.ixx" />
     <ClCompile Include="Win32\calculator-win32.ixx" />
   </ItemGroup>

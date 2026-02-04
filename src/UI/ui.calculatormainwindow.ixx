@@ -1,14 +1,14 @@
-export module calculator:ui_calculatormainwindow;
+export module calculator:ui.calculatormainwindow;
 import std;
 import :win32;
 import :string;
 import :misc;
 import :math;
-import :ui_common;
-import :ui_toplevelwindow;
-import :ui_calculatorcontrols;
-import :ui_control;
-import :ui_font;
+import :ui.common;
+import :ui.toplevelwindow;
+import :ui.calculatorcontrols;
+import :ui.control;
+import :ui.font;
 
 export namespace UI
 {

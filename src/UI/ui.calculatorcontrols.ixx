@@ -1,7 +1,7 @@
-export module calculator:ui_calculatorcontrols;
+export module calculator:ui.calculatorcontrols;
 import std;
 import :win32;
-import :ui_control;
+import :ui.control;
 import :misc;
 
 export namespace UI

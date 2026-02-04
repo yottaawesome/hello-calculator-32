@@ -1,4 +1,4 @@
-export module calculator:ui_capability;
+export module calculator:ui.capability;
 import std;
 import :win32;
 

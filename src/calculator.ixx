@@ -10,13 +10,7 @@ export import :log;
 export import :misc;
 export import :math;
 export import :build;
-export import :ui_toplevelwindow;
-export import :ui_calculatormainwindow;
-export import :ui_control;
-export import :ui_common;
-export import :ui_font;
-export import :ui_calculatorcontrols;
-export import :ui_capability;
+export import :ui;
 
 import std;
 

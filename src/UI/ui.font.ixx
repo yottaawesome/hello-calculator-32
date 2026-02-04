@@ -1,4 +1,4 @@
-export module calculator:ui_font;
+export module calculator:ui.font;
 import std;
 import :win32;
 import :raii;

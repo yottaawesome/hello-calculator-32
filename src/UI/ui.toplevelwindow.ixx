@@ -1,13 +1,13 @@
-export module calculator:ui_toplevelwindow;
+export module calculator:ui.toplevelwindow;
 import std;
 import :win32;
 import :error;
 import :raii;
 import :log;
-import :ui_common;
-import :ui_control;
-import :ui_font;
-import :ui_capability;
+import :ui.common;
+import :ui.control;
+import :ui.font;
+import :ui.capability;
 
 export namespace UI
 {

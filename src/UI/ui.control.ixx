@@ -1,11 +1,11 @@
-export module calculator:ui_control;
+export module calculator:ui.control;
 import std;
 import :win32;
-import :ui_common;
+import :ui.common;
 import :error;
 import :string;
 import :log;
-import :ui_capability;
+import :ui.capability;
 
 // Controls
 export namespace UI

@@ -1,4 +1,4 @@
-export module calculator:ui_common;
+export module calculator:ui.common;
 import std;
 import :win32;
 import :raii;
