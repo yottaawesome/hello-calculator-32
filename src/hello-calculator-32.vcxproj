@@ -180,23 +180,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Build\build.ixx" />
-    <ClCompile Include="Error\error.ixx" />
-    <ClCompile Include="Log\log.ixx" />
-    <ClCompile Include="Math\math.ixx" />
-    <ClCompile Include="Misc\misc.ixx" />
-    <ClCompile Include="Raii\raii.ixx" />
-    <ClCompile Include="String\string.ixx" />
-    <ClCompile Include="UI\ui.calculatorcontrols.ixx" />
-    <ClCompile Include="UI\ui.capability.ixx" />
-    <ClCompile Include="UI\ui.font.ixx" />
-    <ClCompile Include="UI\ui.calculatormainwindow.ixx" />
-    <ClCompile Include="UI\ui.ixx" />
-    <ClCompile Include="UI\ui.toplevelwindow.ixx" />
-    <ClCompile Include="UI\ui.common.ixx" />
-    <ClCompile Include="UI\ui.control.ixx" />
+    <ClCompile Include="build.ixx" />
+    <ClCompile Include="error.ixx" />
+    <ClCompile Include="log.ixx" />
+    <ClCompile Include="math.ixx" />
+    <ClCompile Include="misc.ixx" />
+    <ClCompile Include="raii.ixx" />
+    <ClCompile Include="string.ixx" />
+    <ClCompile Include="ui.calculatorcontrols.ixx" />
+    <ClCompile Include="ui.capability.ixx" />
+    <ClCompile Include="ui.font.ixx" />
+    <ClCompile Include="ui.calculatormainwindow.ixx" />
+    <ClCompile Include="ui.ixx" />
+    <ClCompile Include="ui.toplevelwindow.ixx" />
+    <ClCompile Include="ui.common.ixx" />
+    <ClCompile Include="ui.control.ixx" />
     <ClCompile Include="calculator.ixx" />
-    <ClCompile Include="Win32\calculator-win32.ixx" />
+    <ClCompile Include="win32.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

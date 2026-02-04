@@ -18,52 +18,52 @@
     <ClCompile Include="calculator.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Win32\calculator-win32.ixx">
+    <ClCompile Include="win32.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Error\error.ixx">
+    <ClCompile Include="error.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Raii\raii.ixx">
+    <ClCompile Include="raii.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI\ui.toplevelwindow.ixx">
+    <ClCompile Include="ui.toplevelwindow.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Log\log.ixx">
+    <ClCompile Include="log.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI\ui.common.ixx">
+    <ClCompile Include="ui.common.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI\ui.control.ixx">
+    <ClCompile Include="ui.control.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="String\string.ixx">
+    <ClCompile Include="string.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI\ui.font.ixx">
+    <ClCompile Include="ui.font.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI\ui.calculatormainwindow.ixx">
+    <ClCompile Include="ui.calculatormainwindow.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI\ui.capability.ixx">
+    <ClCompile Include="ui.capability.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Misc\misc.ixx">
+    <ClCompile Include="misc.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Math\math.ixx">
+    <ClCompile Include="math.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Build\build.ixx">
+    <ClCompile Include="build.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI\ui.calculatorcontrols.ixx">
+    <ClCompile Include="ui.calculatorcontrols.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI\ui.ixx">
+    <ClCompile Include="ui.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
