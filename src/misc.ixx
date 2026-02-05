@@ -29,7 +29,7 @@ export namespace Misc
 				// element type. This allows client code to specify filter and
 				// and invocable functions with only what they care about.
 				Overload overload{ std::forward<decltype(invocable)>(invocable)... };
-				([&filterFn, &overload, &tuple]<typename TArg = TArgs>
+				(... or [&filterFn, &overload, &tuple]<typename TArg = TArgs>
 				{
 					if constexpr (not std::invocable<decltype(filterFn), TArg>) 
 						return false;
@@ -38,7 +38,7 @@ export namespace Misc
 					else return std::invoke(filterFn, std::get<TArg>(tuple))
 						? (std::invoke(overload, std::get<TArg>(tuple)), true)
 						: false;
-				}() or ...);
+				}());
 			}(self.AllTypes, std::forward<decltype(filterFn)>(filterFn), std::forward<decltype(invocable)>(invocable)...);
 		}
 
