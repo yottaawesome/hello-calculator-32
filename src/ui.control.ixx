@@ -129,7 +129,7 @@ export namespace UI
 			Win32::DWORD_PTR refData
 		) -> Win32::LRESULT
 		{
-			TControl* pThis = reinterpret_cast<TControl*>(refData);
+			auto pThis = reinterpret_cast<TControl*>(refData);
 			return pThis
 				? pThis->HandleMessage(hwnd, msg, wParam, lParam, idSubclass, refData)
 				: Win32::DefSubclassProc(hwnd, msg, wParam, lParam);

@@ -183,6 +183,7 @@
     <ClCompile Include="build.ixx" />
     <ClCompile Include="error.ixx" />
     <ClCompile Include="log.ixx" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="math.ixx" />
     <ClCompile Include="misc.ixx" />
     <ClCompile Include="raii.ixx" />
