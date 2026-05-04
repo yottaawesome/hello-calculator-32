@@ -11,8 +11,9 @@ import :ui.capability;
 
 export namespace UI
 {
-	struct TopLevelWindow : Window, Textable
+	class TopLevelWindow : public Window, public Textable
 	{
+	public:
 		//
 		// Creates the window.
 		auto Create(this auto&& self) -> decltype(auto)
