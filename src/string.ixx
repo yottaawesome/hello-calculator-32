@@ -39,7 +39,7 @@ export namespace String
 
 		// https://docs.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-widechartomultibyte
 		// Returns the size in bytes, this differs from MultiByteToWideChar, which returns the size in characters
-		int sizeInBytes = Win32::WideCharToMultiByte(
+		auto sizeInBytes = Win32::WideCharToMultiByte(
 			Win32::CpUtf8,										// CodePage
 			Win32::WcNoBestFitChars,							// dwFlags 
 			&wstr[0],										// lpWideCharStr
@@ -50,10 +50,10 @@ export namespace String
 			nullptr											// lpUsedDefaultChar
 		);
 		if (sizeInBytes == 0)
-			throw std::runtime_error("WideCharToMultiByte() [1] failed");
+			throw std::runtime_error{"WideCharToMultiByte() [1] failed"};
 
-		std::string strTo(sizeInBytes / sizeof(char), '\0');
-		int status = Win32::WideCharToMultiByte(
+		auto strTo = std::string(sizeInBytes / sizeof(char), '\0');
+		auto status = Win32::WideCharToMultiByte(
 			Win32::CpUtf8,										// CodePage
 			Win32::WcNoBestFitChars,							// dwFlags 
 			&wstr[0],										// lpWideCharStr
@@ -64,7 +64,7 @@ export namespace String
 			nullptr											// lpUsedDefaultChar
 		);
 		if (status == 0)
-			throw std::runtime_error("WideCharToMultiByte() [2] failed");
+			throw std::runtime_error{"WideCharToMultiByte() [2] failed"};
 
 		return strTo;
 	}
@@ -76,7 +76,7 @@ export namespace String
 
 		// https://docs.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-multibytetowidechar
 		// Returns the size in characters, this differs from WideCharToMultiByte, which returns the size in bytes
-		int sizeInCharacters = Win32::MultiByteToWideChar(
+		auto sizeInCharacters = Win32::MultiByteToWideChar(
 			Win32::CpUtf8,									// CodePage
 			0,											// dwFlags
 			&str[0],									// lpMultiByteStr
@@ -85,10 +85,10 @@ export namespace String
 			0											// cchWideChar
 		);
 		if (sizeInCharacters == 0)
-			throw std::runtime_error("MultiByteToWideChar() [1] failed");
+			throw std::runtime_error{"MultiByteToWideChar() [1] failed"};
 
-		std::wstring wstrTo(sizeInCharacters, '\0');
-		int status = Win32::MultiByteToWideChar(
+		auto wstrTo = std::wstring(sizeInCharacters, '\0');
+		auto status = Win32::MultiByteToWideChar(
 			Win32::CpUtf8,									// CodePage
 			0,											// dwFlags
 			&str[0],									// lpMultiByteStr
@@ -97,7 +97,7 @@ export namespace String
 			static_cast<int>(wstrTo.size())				// cchWideChar
 		);
 		if (status == 0)
-			throw std::runtime_error("MultiByteToWideChar() [2] failed");
+			throw std::runtime_error{"MultiByteToWideChar() [2] failed"};
 
 		return wstrTo;
 	}

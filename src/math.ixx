@@ -5,11 +5,11 @@ export namespace Math
 {
 	auto HasOnlyZeroesForDecimalPart(double num) -> bool
 	{
-		double integerPart;
-		double fractionalPart = std::modf(num, &integerPart);
+		auto integerPart = double{};
+		auto fractionalPart = std::modf(num, &integerPart);
 		// Due to floating-point precision, comparing directly to 0.0 might be unreliable.
 		// Instead, compare the absolute value of the fractional part to a small epsilon.
-		constexpr double Epsilon = 1e-9; // A small value to account for precision issues
+		constexpr auto Epsilon = 1e-9; // A small value to account for precision issues
 		return std::abs(fractionalPart) < Epsilon;
 	}
 
@@ -54,11 +54,13 @@ export namespace Math
 		constexpr auto Calculate(this auto&& self) -> double
 		{
 			if (not self.AllSpecified())
-				throw std::runtime_error("Both operands and an operator are not specified.");
+				throw std::runtime_error{"Both operands and an operator are not specified."};
 
 			self.Calculation = std::visit(
 				[left = *self.Left, right = *self.Right](const auto& mathOperator)
-					{ return mathOperator(left, right); },
+				{ 
+					return mathOperator(left, right); 
+				},
 				*self.Operator
 			);
 			return *self.Calculation;

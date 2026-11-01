@@ -28,7 +28,7 @@ export namespace Misc
 				// tuple element type, or the overload does not accept the tuple
 				// element type. This allows client code to specify filter and
 				// and invocable functions with only what they care about.
-				Overload overload{ std::forward<decltype(invocable)>(invocable)... };
+				auto overload = Overload{ std::forward<decltype(invocable)>(invocable)... };
 				(... or [&filterFn, &overload, &tuple]<typename TArg = TArgs>
 				{
 					if constexpr (not std::invocable<decltype(filterFn), TArg>) 

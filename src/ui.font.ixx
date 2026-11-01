@@ -24,12 +24,12 @@ namespace UI
 	{
 		auto Create(this const auto) -> Win32::HFONT
 		{
-			Win32::NONCLIENTMETRICS metrics{ .cbSize = sizeof(metrics) };
+			auto metrics = Win32::NONCLIENTMETRICS{ .cbSize = sizeof(Win32::NONCLIENTMETRICS) };
 			Win32::SystemParametersInfoW(Win32::SpiGetNonClientMetrics, metrics.cbSize, &metrics, 0);
 			// When you're done with the font, don't forget to call Win32::DeleteObject();
-			Win32::HFONT font = Win32::CreateFontIndirectW(&metrics.lfCaptionFont);
+			auto font = Win32::CreateFontIndirectW(&metrics.lfCaptionFont);
 			if (not font)
-				throw Error::Win32Error(Win32::GetLastError(), "Failed to load system font.");
+				throw Error::Win32Error{Win32::GetLastError(), "Failed to load system font."};
 			return font;
 		}
 	};
@@ -38,7 +38,7 @@ namespace UI
 	{
 		auto Create(this const auto) -> Win32::HFONT
 		{
-			Win32::HFONT font = Win32::CreateFontW(
+			auto font = Win32::CreateFontW(
 				-32, // Font height (negative for desired height in logical units)
 				0,   // Width (0 for default)
 				0,   // Escapement
@@ -55,7 +55,7 @@ namespace UI
 				L"Segoe UI" // Font face name
 			);
 			if (not font)
-				throw Error::Win32Error(Win32::GetLastError(), "Failed to Segoe font.");
+				throw Error::Win32Error{Win32::GetLastError(), "Failed to Segoe font."};
 			return font;
 		}
 	};

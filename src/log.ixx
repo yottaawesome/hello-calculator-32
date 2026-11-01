@@ -23,7 +23,7 @@ namespace
 			if constexpr (Build::IsDebug)
 			{
 				Win32::AllocConsole();
-				FILE* fDummy;
+				auto fDummy = static_cast<FILE*>(nullptr);
 				freopen_s(&fDummy, "CONIN$", "r", stdin);
 				freopen_s(&fDummy, "CONOUT$", "w", stderr);
 				freopen_s(&fDummy, "CONOUT$", "w", stdout);

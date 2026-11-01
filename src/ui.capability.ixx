@@ -17,7 +17,7 @@ export namespace UI
 			auto handle = self.GetHandle();
 			if (not handle)
 				return {};
-			std::wstring buffer(Win32::GetWindowTextLengthW(handle)+1, '\0');
+			auto buffer = std::wstring(Win32::GetWindowTextLengthW(handle)+1, '\0');
 			Win32::GetWindowTextW(self.GetHandle(), buffer.data(), static_cast<int>(buffer.size()));
 			// Remove trailing null character.
 			return buffer.empty() ? buffer : (buffer.pop_back(), buffer);

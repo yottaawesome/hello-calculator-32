@@ -47,7 +47,7 @@ export namespace UI
 				"This type needs a ClassName member that returns a wstring or wstring_view!");
 			
 			auto properties = self.GetDefaultProperties();
-			Win32::HWND window = Win32::CreateWindowExW(
+			auto window = Win32::CreateWindowExW(
 				properties.ExtendedStyles,
 				self.ClassName.data(),
 				properties.Text.empty() ? nullptr : properties.Text.data(),
@@ -62,13 +62,13 @@ export namespace UI
 				nullptr
 			);
 			if (not window)
-				throw Error::Win32Error(Win32::GetLastError(), "CreateWindowExW failed for control.");
+				throw Error::Win32Error{Win32::GetLastError(), "CreateWindowExW failed for control."};
 
 			if (self.m_window = Raii::HwndUniquePtr(window); not self.m_window)
-				throw Error::Win32Error(Win32::GetLastError(), "Failed to adopt control HWND.");
+				throw Error::Win32Error{Win32::GetLastError(), "Failed to adopt control HWND."};
 
 			if (not Win32::SetWindowSubclass(self.m_window.get(), SubclassProc<std::remove_cvref_t<decltype(self)>>, self.GetSubclassId(), reinterpret_cast<Win32::DWORD_PTR>(&self)))
-				throw Error::Win32Error(Win32::GetLastError(), "SetWindowSubclass failed for control.");
+				throw Error::Win32Error{Win32::GetLastError(), "SetWindowSubclass failed for control."};
 
 			if constexpr (requires { self.Init(); })
 				self.Init();
@@ -96,7 +96,7 @@ export namespace UI
 				// THE TWATS AT MICROSOFT, SO THEY CAN IGNORE IT ALONG WITH ALL THE OTHER CONSTEXPR BUGS 
 				// I'VE REPORTED.
 				// END MSVC BUG NOTE
-				bool handled = (... or
+				auto handled = (... or
 					[&result, msgType]<Win32::DWORD VRawMsgType>(auto&& self, Win32Message<VRawMsgType> msg)
 					{
 						//if constexpr (requires { self.On(winMsg); }) // doesn't work
@@ -162,12 +162,12 @@ export namespace UI
 			};
 		};
 
-		constexpr static std::wstring_view ClassName = L"Static";
+		constexpr static auto ClassName = std::wstring_view{L"Static"};
 	};
 
 	struct Button : Control
 	{
-		constexpr static std::wstring_view ClassName = L"Button";
+		constexpr static auto ClassName = std::wstring_view{L"Button"};
 
 		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp> msg) -> Win32::LRESULT
 		{

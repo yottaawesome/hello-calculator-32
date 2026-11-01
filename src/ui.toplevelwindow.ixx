@@ -30,11 +30,11 @@ export namespace UI
 					if (lastError == Win32::ErrorCodes::ClassAlreadyExists)
 						return true;
 
-					throw Error::Win32Error(lastError, "RegisterClassExW failed.");
+					throw Error::Win32Error{lastError, "RegisterClassExW failed."};
 				}();
 
-			CreateWindowArgs args = self.GetCreationArgs();
-			Win32::HWND hwnd = Win32::CreateWindowExW(
+			auto args = self.GetCreationArgs();
+			auto hwnd = Win32::CreateWindowExW(
 				args.ExtendedStyle,
 				self.ClassName().data(),
 				args.WindowName,
@@ -49,7 +49,7 @@ export namespace UI
 				&self
 			);
 			if (not hwnd)
-				throw Error::Win32Error(Win32::GetLastError(), "CreateWindowExW failed.");
+				throw Error::Win32Error{Win32::GetLastError(), "CreateWindowExW failed."};
 
 			// Ownership of hwnd is established in WM_NCCREATE. Do not reassign here.
 			if constexpr (requires { self.Init(); })
@@ -64,7 +64,7 @@ export namespace UI
 		{
 			if constexpr (true) // Basic loop
 			{
-				Win32::MSG msg{};
+				auto msg = Win32::MSG{};
 				while (Win32::GetMessageW(&msg, nullptr, 0, 0))
 				{
 					Win32::TranslateMessage(&msg);
@@ -74,7 +74,7 @@ export namespace UI
 			}
 			else // Optional processing loop
 			{
-				Win32::MSG msg{};
+				auto msg = Win32::MSG{};
 				while (msg.message != Win32::Messages::Quit)
 				{
 					if (Win32::PeekMessageW(&msg, self.GetHandle(), 0, 0, Win32::PeekMessageOptions::Remove))
@@ -147,8 +147,8 @@ export namespace UI
 		{
 			return[&self, hwnd, msgType, wParam, lParam]<size_t...Is>(std::index_sequence<Is...>)
 			{
-				Win32::LRESULT result;
-				bool handled = (... or
+				auto result = Win32::LRESULT{};
+				auto handled = (... or
 					[=, &self, &result]<typename TMsg = Win32Message<HandledMessages[Is]>> // can also use std::get<Is>, which is more generic.
 					{
 						if constexpr (Handles<decltype(self), TMsg>)

@@ -71,9 +71,9 @@ export namespace UI
 				if (text.empty())
 					return;
 
-				double value = std::stod(text);
+				auto value = std::stod(text);
 				if (std::isnan(value))
-					throw std::out_of_range("NaN");
+					throw std::out_of_range{"NaN"};
 				self.m_calculator.Left = value;
 				textWindow.ClearText();
 			}
@@ -96,7 +96,7 @@ export namespace UI
 					return;
 				double value = std::stod(text);
 				if (std::isnan(value))
-					throw std::out_of_range("NaN");
+					throw std::out_of_range{"NaN"};
 				self.m_calculator.InsertOperand(value);
 				self.m_calculator.Calculate();
 				textWindow.SetText(self.m_calculator.GetCalculationAsString());
@@ -115,7 +115,7 @@ export namespace UI
 			Log::Info("{} was pressed!", btn.Operator());
 
 			auto& output = self.m_buttons.GetByType<OutputWindow>();
-			std::wstring out = output.GetText();
+			auto out = output.GetText();
 			if (not out.contains(L"."))
 				output.AppendText(L".");
 		}
