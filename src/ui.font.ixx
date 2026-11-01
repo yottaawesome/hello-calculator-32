@@ -8,13 +8,13 @@ namespace UI
 {
 	struct Font
 	{
-		auto Get(this const auto self) -> Win32::HFONT
+		auto Get(this const auto& self) -> Win32::HFONT
 		{
-			static Raii::FontUniquePtr font{ self.Create() };
+			static auto font = Raii::FontUniquePtr{ self.Create() };
 			return font.get();
 		}
 
-		operator Win32::HFONT(this const auto self)
+		operator Win32::HFONT(this const auto& self)
 		{
 			return self.Get();
 		}
@@ -22,7 +22,7 @@ namespace UI
 
 	struct SystemFontLoader : Font
 	{
-		auto Create(this const auto) -> Win32::HFONT
+		auto Create(this const auto&) -> Win32::HFONT
 		{
 			auto metrics = Win32::NONCLIENTMETRICS{ .cbSize = sizeof(Win32::NONCLIENTMETRICS) };
 			Win32::SystemParametersInfoW(Win32::SpiGetNonClientMetrics, metrics.cbSize, &metrics, 0);
@@ -36,7 +36,7 @@ namespace UI
 
 	struct SegoeFontLoader : Font
 	{
-		auto Create(this const auto) -> Win32::HFONT
+		auto Create(this const auto&) -> Win32::HFONT
 		{
 			auto font = Win32::CreateFontW(
 				-32, // Font height (negative for desired height in logical units)
@@ -63,6 +63,6 @@ namespace UI
 
 export namespace UI
 {
-	constexpr SystemFontLoader SystemFont;
-	constexpr SegoeFontLoader SegoeFont;
+	constexpr auto SystemFont = SystemFontLoader{};
+	constexpr auto SegoeFont = SegoeFontLoader{};
 }
