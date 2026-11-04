@@ -15,9 +15,7 @@ try
 			Win32::InitCommonControlsFlag::Bar,
 	};
 	Win32::InitCommonControlsEx(&icc);
-	UI::CalculatorMainWindow{}.Create().Show().MainLoop();
-
-	return 0;
+	return static_cast<int>(UI::CalculatorMainWindow{}.Create().Show().MainLoop());
 }
 catch (const std::exception& ex)
 {

@@ -97,6 +97,11 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(RoutingTests)'=='true'">
+    <IntDir>$(Platform)\$(Configuration)\RoutingTests\</IntDir>
+    <OutDir>$(Platform)\$(Configuration)\RoutingTests\</OutDir>
+    <TargetName>control-routing-tests</TargetName>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -188,11 +193,25 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(RoutingTests)'=='true'">
+    <ClCompile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <BuildStlModules>true</BuildStlModules>
+      <ModuleOutputFile>$(IntDir)%(RelativeDir)</ModuleOutputFile>
+      <ModuleDependenciesFile>$(IntDir)%(RelativeDir)</ModuleDependenciesFile>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="build.ixx" />
     <ClCompile Include="error.ixx" />
     <ClCompile Include="log.ixx" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="main.cpp">
+      <ExcludedFromBuild Condition="'$(RoutingTests)'=='true'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="math.ixx" />
     <ClCompile Include="misc.ixx" />
     <ClCompile Include="raii.ixx" />
@@ -207,6 +226,9 @@
     <ClCompile Include="ui.control.ixx" />
     <ClCompile Include="calculator.ixx" />
     <ClCompile Include="win32.ixx" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RoutingTests)'=='true'">
+    <ClCompile Include="..\tests\control-routing.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

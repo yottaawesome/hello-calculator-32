@@ -26,27 +26,42 @@ export namespace UI
 	constexpr std::array HandledControlMessages{
 		Win32::Messages::LeftButtonUp,
 		Win32::Messages::Paint,
+		Win32::Messages::Command,
 		Win32::Messages::Notify,
 		Win32::Messages::DrawItem,
 		Win32::Messages::MouseHover,
 		Win32::Messages::MouseLeave,
 		Win32::Messages::MouseMove,
 		Win32::Messages::EraseBackground,
-		Win32::Messages::Create
+		Win32::Messages::Destroy,
+		Win32::Messages::NonClientDestroy
 	};
 
 	struct Control : Window
 	{
 		constexpr Control() = default;
 
-		// Require lvalue 'self' to ensure the address passed to refData remains valid.
+		~Control()
+		{
+			// Do not dispatch to a derived type once its destructor has finished.
+			if (m_window and m_subclassProc)
+				Win32::RemoveWindowSubclass(m_window.get(), m_subclassProc, m_subclassId);
+		}
+
+		// Call through the concrete type, never a base reference: self determines callback dispatch.
 		auto Create(this auto& self, Win32::HWND parent) -> void
 		{
 			static_assert(
 				requires { { self.ClassName.data() } -> std::same_as<const wchar_t*>; }, 
 				"This type needs a ClassName member that returns a wstring or wstring_view!");
 			
+			if (self.m_window)
+				throw std::logic_error{"Control has already been created."};
+
 			auto properties = self.GetDefaultProperties();
+			auto subclassId = self.GetSubclassId();
+			// WM_CREATE is sent inside CreateWindowExW, before this subclass is installed.
+			// Use Init() for post-creation initialization; OnMessage(WM_CREATE) cannot intercept it.
 			auto window = Win32::CreateWindowExW(
 				properties.ExtendedStyles,
 				self.ClassName.data(),
@@ -67,11 +82,25 @@ export namespace UI
 			if (self.m_window = Raii::HwndUniquePtr(window); not self.m_window)
 				throw Error::Win32Error{Win32::GetLastError(), "Failed to adopt control HWND."};
 
-			if (not Win32::SetWindowSubclass(self.m_window.get(), SubclassProc<std::remove_cvref_t<decltype(self)>>, self.GetSubclassId(), reinterpret_cast<Win32::DWORD_PTR>(&self)))
-				throw Error::Win32Error{Win32::GetLastError(), "SetWindowSubclass failed for control."};
+			self.m_subclassProc = SubclassProc<std::remove_cvref_t<decltype(self)>>;
+			self.m_subclassId = subclassId;
+			if (not Win32::SetWindowSubclass(window, self.m_subclassProc, subclassId, reinterpret_cast<Win32::DWORD_PTR>(&self)))
+			{
+				auto error = Win32::GetLastError();
+				self.Destroy();
+				throw Error::Win32Error{error, "SetWindowSubclass failed for control."};
+			}
 
-			if constexpr (requires { self.Init(); })
-				self.Init();
+			try
+			{
+				if constexpr (requires { self.Init(); })
+					self.Init();
+			}
+			catch (...)
+			{
+				self.Destroy();
+				throw;
+			}
 		}
 
 		auto HandleMessage(
@@ -79,28 +108,16 @@ export namespace UI
 			Win32::HWND hwnd,
 			Win32::UINT msgType,
 			Win32::WPARAM wParam,
-			Win32::LPARAM lParam,
-			Win32::UINT_PTR uIdSubclass,
-			Win32::DWORD_PTR dwRefData
-		) -> Win32::LRESULT
+			Win32::LPARAM lParam
+		) -> MessageResult
 		{
 			return[&self, hwnd, msgType, wParam, lParam]<size_t...Is>(std::index_sequence<Is...>)
 			{
-				Win32::LRESULT result;
-				// MSVC BUG NOTE
-				// CAPTURING SELF IN THE CAPTURE CLAUSE CAUSES THE CONCEPT EVALUATION TO ALWAYS BE TRUE,
-				// NO MATTER WHAT THE CONCEPT ACTUALLY IS, THUS CAUSING A COMPILE ERROR WHERE IT SHOULD 
-				// BE FINE. IT'S NOT CLEAR WHY, BECAUSE SIMILAR CODE WORKS FINE IN THE  WIN32-EXPERIMENTS
-				// REPO. THIS IS IS BECAUSE MICROSOFT IS RETARDED AND CAN'T FIX THEIR FUCKING COMPILER.
-				// THIS IS A REMINDER TO MAKE A MINIMAL REPRODUCIBLE SAMPLE OF THIS BUG AND REPORT IT TO
-				// THE TWATS AT MICROSOFT, SO THEY CAN IGNORE IT ALONG WITH ALL THE OTHER CONSTEXPR BUGS 
-				// I'VE REPORTED.
-				// END MSVC BUG NOTE
+				auto result = MessageResult{};
 				auto handled = (... or
 					[&result, msgType]<Win32::DWORD VRawMsgType>(auto&& self, Win32Message<VRawMsgType> msg)
 					{
-						//if constexpr (requires { self.On(winMsg); }) // doesn't work
-						//if constexpr (requires { self.OnMessage(Win32Message<VRawMsgType>{}); })
+						// Pass self as an argument to work around MSVC's concept evaluation when captured.
 						if constexpr (Handles<decltype(self), std::remove_cvref_t<decltype(msg)>>)
 						{
 							return msg == msgType ? (result = self.OnMessage(msg), true) : false;
@@ -111,34 +128,56 @@ export namespace UI
 						}
 					}(self, Win32Message<std::get<Is>(HandledControlMessages)>{ hwnd, wParam, lParam }));
 
-				// Always unhook on WM_NCDESTROY to avoid stale subclass state/refData.
-				if (msgType == Win32::Messages::NonClientDestroy)
-					Win32::RemoveWindowSubclass(hwnd, SubclassProc<std::remove_cvref_t<decltype(self)>>, self.GetSubclassId());
-
-				return handled ? result : Win32::DefSubclassProc(hwnd, msgType, wParam, lParam);
+				return handled ? result : std::nullopt;
 			}(std::make_index_sequence<HandledControlMessages.size()>());
 		}
 
 		template<typename TControl>
-		static auto SubclassProc(
+		static auto __stdcall SubclassProc(
 			Win32::HWND hwnd,
 			Win32::UINT msg,
 			Win32::WPARAM wParam,
 			Win32::LPARAM lParam,
 			Win32::UINT_PTR idSubclass,
 			Win32::DWORD_PTR refData
-		) -> Win32::LRESULT
+		) noexcept -> Win32::LRESULT
 		{
 			auto pThis = reinterpret_cast<TControl*>(refData);
-			return pThis
-				? pThis->HandleMessage(hwnd, msg, wParam, lParam, idSubclass, refData)
-				: Win32::DefSubclassProc(hwnd, msg, wParam, lParam);
+			// Cleanup precedes user handlers, including handlers that throw.
+			if (msg == Win32::Messages::NonClientDestroy)
+			{
+				Win32::RemoveWindowSubclass(hwnd, SubclassProc<TControl>, idSubclass);
+				if (pThis and pThis->m_window.get() == hwnd)
+				{
+					pThis->m_window.release();
+					pThis->m_subclassProc = nullptr;
+				}
+			}
+
+			try
+			{
+				auto result = pThis ? pThis->HandleMessage(hwnd, msg, wParam, lParam) : MessageResult{};
+				return result ? *result : Win32::DefSubclassProc(hwnd, msg, wParam, lParam);
+			}
+			catch (const std::exception& ex)
+			{
+				ReportCallbackException(ex.what());
+			}
+			catch (...)
+			{
+				ReportCallbackException("Unknown exception");
+			}
+			return 0;
 		}
 
-		auto GetId(this auto&& self) noexcept -> unsigned { return self.GetDefaultProperties().Id; }
+		auto GetId(this auto&& self) -> unsigned { return self.GetDefaultProperties().Id; }
 
 		// Default subclass ID: reuse the control ID unless overridden by derived controls.
-		auto GetSubclassId(this auto&& self) noexcept -> unsigned { return self.GetId(); }
+		auto GetSubclassId(this auto&& self) -> Win32::UINT_PTR { return self.GetId(); }
+
+	private:
+		Win32::SUBCLASSPROC m_subclassProc = nullptr;
+		Win32::UINT_PTR m_subclassId = 0;
 	};
 
 	template<unsigned VId, int VX, int VY, int VWidth, int VHeight>
@@ -169,11 +208,18 @@ export namespace UI
 	{
 		constexpr static auto ClassName = std::wstring_view{L"Button"};
 
-		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::LeftButtonUp> msg) -> Win32::LRESULT
+		// Derived overloads must retain this one with "using Button::OnMessage".
+		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::Command> msg) -> MessageResult
 		{
-			if constexpr (requires { self.OnClick(); })
-				self.OnClick();
-			return Win32::DefSubclassProc(msg.Hwnd, msg.uMsg, msg.wParam, msg.lParam);
+			if (NotificationSource(msg) == self.GetHandle() and Win32::HiWord(msg.wParam) == Win32::Messages::ButtonClicked)
+			{
+				if constexpr (requires { self.OnClick(); })
+				{
+					self.OnClick();
+					return 0;
+				}
+			}
+			return std::nullopt;
 		}
 
 		auto GetDefaultProperties(this auto&& self) -> ControlProperties

@@ -15,12 +15,18 @@ export namespace UI
 	class CalculatorMainWindow : public TopLevelWindow
 	{
 	public:
-		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::Paint> message) -> Win32::LRESULT
+		~CalculatorMainWindow()
 		{
-			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
+			// Destroy native windows while the calculator and child control objects are still alive.
+			this->Destroy();
 		}
 
-		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::KeyUp> message) -> Win32::LRESULT
+		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::Paint> message) -> MessageResult
+		{
+			return std::nullopt;
+		}
+
+		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::KeyUp> message) -> MessageResult
 		{
 			self.m_buttons.Find(
 				[keyCode = message.wParam](const KeyCodeButton auto& btn) -> bool
@@ -35,18 +41,39 @@ export namespace UI
 			);
 			// Focus needs to be set back to the window, because it goes to the button
 			self.TakeFocus();
-			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
+			return std::nullopt;
 		}
 
-		auto OnMessage(this auto&& self, Win32Message<Win32::Messages::Command> message) -> Win32::LRESULT
+		template<Win32::DWORD VMsg>
+			requires (VMsg == Win32::Messages::Command or VMsg == Win32::Messages::Notify or VMsg == Win32::Messages::DrawItem)
+		auto OnMessage(this auto&& self, Win32Message<VMsg> message) -> MessageResult
 		{
+			auto source = NotificationSource(message);
+			if (not source)
+				return std::nullopt;
+
+			auto result = MessageResult{};
 			self.m_buttons.Find(
-				[id = Win32::LoWord(message.wParam)](AnyButton auto&& control) { return control.GetId() == id; },
-				[&self](AnyButton auto&& btn) { self.Clicked(btn); }
+				[source](auto&& control) { return control.GetHandle() == source; },
+				[&self, &result, message](auto&& control)
+				{
+					// Preserve the original parent HWND and parameters when reflecting a notification.
+					result = control.HandleMessage(message.Hwnd, message.uMsg, message.wParam, message.lParam);
+					if constexpr (VMsg == Win32::Messages::Command and AnyButton<decltype(control)>)
+					{
+						if (Win32::HiWord(message.wParam) == Win32::Messages::ButtonClicked)
+						{
+							if (not result)
+							{
+								self.Clicked(control);
+								result = 0;
+							}
+							self.TakeFocus();
+						}
+					}
+				}
 			);
-			// Focus needs to be set back to the window, because it goes to the button
-			self.TakeFocus();
-			return Win32::DefWindowProcW(message.Hwnd, message.uMsg, message.wParam, message.lParam);
+			return result;
 		}
 
 		auto Clicked(this auto&& self, NumberInput auto& btn)

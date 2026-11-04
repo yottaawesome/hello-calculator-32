@@ -14,6 +14,12 @@ export namespace UI
 	class TopLevelWindow : public Window, public Textable
 	{
 	public:
+		~TopLevelWindow()
+		{
+			if (m_window)
+				Win32::SetWindowLongPtrW(m_window.get(), Win32::Gwlp_UserData, 0);
+		}
+
 		//
 		// Creates the window.
 		auto Create(this auto&& self) -> decltype(auto)
@@ -96,42 +102,55 @@ export namespace UI
 			Win32::Messages::Paint,
 			Win32::Messages::KeyUp,
 			Win32::Messages::Command,
+			Win32::Messages::Notify,
+			Win32::Messages::DrawItem,
 			Win32::Messages::NonClientDestroy
 		};
 
 		//
 		// The main Window proc.
 		template<typename TWindow>
-		static auto WindowProc(Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) -> Win32::LRESULT
+		static auto __stdcall WindowProc(Win32::HWND hwnd, unsigned uMsg, Win32::WPARAM wParam, Win32::LPARAM lParam) noexcept -> Win32::LRESULT
 		{
-			TWindow* pThis = nullptr;
-
-			if (uMsg == Win32::Messages::NonClientCreate)
+			try
 			{
-				auto* pCreate = reinterpret_cast<Win32::CREATESTRUCT*>(lParam);
-				pThis = reinterpret_cast<TWindow*>(pCreate->lpCreateParams);
-				Win32::SetWindowLongPtrW(hwnd, Win32::Gwlp_UserData, reinterpret_cast<Win32::LONG_PTR>(pThis));
+				TWindow* pThis = nullptr;
 
-				// Adopt ownership once, during creation
-				pThis->m_window = Raii::HwndUniquePtr(hwnd);
-			}
-			else
-			{
-				pThis = reinterpret_cast<TWindow*>(Win32::GetWindowLongPtrW(hwnd, Win32::Gwlp_UserData));
-
-				// Detach before the OS destroys the HWND to avoid double-destroy later.
-				// Caught by AI, more information here https://learn.microsoft.com/en-us/cpp/mfc/tn017-destroying-window-objects?view=msvc-170
-				// under the "Auto cleanup with CWnd::PostNcDestroy" header.
-				if (pThis and uMsg == Win32::Messages::NonClientDestroy)
+				if (uMsg == Win32::Messages::NonClientCreate)
 				{
-					Win32::SetWindowLongPtrW(hwnd, Win32::Gwlp_UserData, 0);
-					pThis->m_window.release();
-				}
-			}
+					auto* pCreate = reinterpret_cast<Win32::CREATESTRUCT*>(lParam);
+					pThis = reinterpret_cast<TWindow*>(pCreate->lpCreateParams);
+					Win32::SetWindowLongPtrW(hwnd, Win32::Gwlp_UserData, reinterpret_cast<Win32::LONG_PTR>(pThis));
 
-			return pThis
-				? pThis->HandleMessage(hwnd, uMsg, wParam, lParam)
-				: Win32::DefWindowProcW(hwnd, uMsg, wParam, lParam);
+					// Adopt ownership once, during creation.
+					pThis->m_window = Raii::HwndUniquePtr(hwnd);
+				}
+				else
+				{
+					pThis = reinterpret_cast<TWindow*>(Win32::GetWindowLongPtrW(hwnd, Win32::Gwlp_UserData));
+
+					// Detach before user handlers, even if a destruction handler throws.
+					if (pThis and uMsg == Win32::Messages::NonClientDestroy)
+					{
+						Win32::SetWindowLongPtrW(hwnd, Win32::Gwlp_UserData, 0);
+						if (pThis->m_window.get() == hwnd)
+							pThis->m_window.release();
+					}
+				}
+
+				return pThis
+					? pThis->HandleMessage(hwnd, uMsg, wParam, lParam)
+					: Win32::DefWindowProcW(hwnd, uMsg, wParam, lParam);
+			}
+			catch (const std::exception& ex)
+			{
+				ReportCallbackException(ex.what());
+			}
+			catch (...)
+			{
+				ReportCallbackException("Unknown exception");
+			}
+			return uMsg == Win32::Messages::Create ? -1 : 0;
 		}
 
 		//
@@ -147,7 +166,7 @@ export namespace UI
 		{
 			return[&self, hwnd, msgType, wParam, lParam]<size_t...Is>(std::index_sequence<Is...>)
 			{
-				auto result = Win32::LRESULT{};
+				auto result = MessageResult{};
 				auto handled = (... or
 					[=, &self, &result]<typename TMsg = Win32Message<HandledMessages[Is]>> // can also use std::get<Is>, which is more generic.
 					{
@@ -155,8 +174,8 @@ export namespace UI
 							return TMsg::uMsg == msgType ? (result = self.OnMessage(TMsg{ hwnd, wParam, lParam }), true) : false;
 						return false;
 					}());
-				if (handled)
-					return result;
+				if (handled and result)
+					return *result;
 				return msgType == Win32::Messages::Destroy
 					? (Win32::PostQuitMessage(0), 0)
 					: Win32::DefWindowProcW(hwnd, msgType, wParam, lParam);

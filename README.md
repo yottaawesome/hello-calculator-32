@@ -24,6 +24,29 @@ Five C++ features form the backbone of this implementation.
 
 You'll notice a console window is displayed alongside the GUI window when the calculator runs; this is simply used in the `Debug` and `Instrumented` builds for logging and debugging purposes. It's suppressed in the `Release` build.
 
+### Message routing and lifetime
+
+Window and control objects are non-copyable and non-movable because native callbacks retain their addresses. Call `Create()` through the concrete type, not a base reference: explicit-object-parameter dispatch uses the caller's static type. All creation, message handling, and destruction must stay on the owning UI thread.
+
+If a derived window or control owns state used by handlers, call `Destroy()` at the start of its destructor, before that state is torn down. `CalculatorMainWindow` demonstrates this. The base destructors disconnect callbacks before releasing any remaining HWND; `WM_NCDESTROY` also clears ownership when Windows destroys a child through its parent.
+
+`OnMessage` may return either `Win32::LRESULT` or `UI::MessageResult`. Every result value, including zero, means handled. Return `std::nullopt` to request default processing instead of calling a default procedure yourself; the router forwards once to the appropriate procedure. Adding an overload to a derived class hides inherited overloads, so preserve them with a declaration such as `using Button::OnMessage;`. Keep the relevant explicit message list in sync with new handlers; overloads for unlisted messages are not dispatched.
+
+Controls receive their own native messages through `SetWindowSubclass`. Notifications about a control (`WM_COMMAND`, `WM_NOTIFY`, and `WM_DRAWITEM`) are sent to its parent instead. `CalculatorMainWindow` reflects these to the concrete control identified by the source HWND. Reflected messages retain the original **parent** HWND and parameters; return `std::nullopt` for parent default processing, never call `DefSubclassProc` on that parent. An optional button `OnClick()` hook consumes `BN_CLICKED`; otherwise the calculator handles the click. Raw mouse-up is not treated as activation.
+
+The original `WM_CREATE` occurs before the subclass is installed and cannot reach a control's typed handler. Use `Init()` for post-creation initialization. Exceptions escaping typed handlers are caught at native callback boundaries, reported to the debugger, and request application shutdown with exit code 1; they are not forwarded for a second processing attempt.
+
 ## Building
 
 Visual Studio 2026 with MSVC 17.15 or later with the C++ desktop workload is required to build the solution. Three build configurations are provided: `Release`, `Debug` and `Instrumented`. The `Instrumented` configuration has address sanitizer (ASAN) enabled, which ironically enough found [a bad codegen bug in MSVC](https://developercommunity.visualstudio.com/t/Runtime-crash-with-constexpr-and-std::st/10939905) (I'm pretty certain I've also run into other MSVC codegen bugs while developing this sample, but I can't be bothered fully investigating them).
+
+From a Visual Studio Developer PowerShell, build and run the native control routing regression tests with:
+
+```powershell
+msbuild src\hello-calculator-32.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:RoutingTests=true
+.\src\x64\Debug\RoutingTests\control-routing-tests.exe
+```
+
+The tests use hidden windows to check forwarding, parent notification reflection, handle cleanup, callback exceptions, and mouse/keyboard activation without entering the interactive calculator loop.
+
+Use `Platform=Win32` and the corresponding `src\Win32` output path to check 32-bit callbacks, or `Configuration=Instrumented` with `Platform=x64` to run with AddressSanitizer.

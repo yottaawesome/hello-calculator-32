@@ -5,6 +5,12 @@ module;
 #include <CommCtrl.h>
 #include <wingdi.h>
 
+#ifndef _WIN64
+// The SDK aliases these names with macros on x86; macros do not cross module boundaries.
+#undef GetWindowLongPtrW
+#undef SetWindowLongPtrW
+#endif
+
 export module calculator:win32;
 import std;
 
@@ -55,6 +61,9 @@ export namespace Win32
 		::UINT32,
 		::UINT_PTR,
 		::DWORD_PTR,
+		::SUBCLASSPROC,
+		::NMHDR,
+		::DRAWITEMSTRUCT,
 		::INITCOMMONCONTROLSEX,
 		::NONCLIENTMETRICS,
 		::HFONT,
@@ -67,14 +76,13 @@ export namespace Win32
 		::SetWindowSubclass,
 		::DestroyWindow,
 		::PostQuitMessage,
+		::OutputDebugStringA,
 		::PeekMessageW,
 		::TranslateMessage,
 		::DispatchMessageW,
 		::GetMessageW,
 		::TranslateMessage,
 		::DispatchMessageW,
-		::GetWindowLongPtrW,
-		::SetWindowLongPtrW,
 		::CloseHandle,
 		::WaitForSingleObject,
 		::WaitForSingleObjectEx,
@@ -132,10 +140,25 @@ export namespace Win32
 		::RemoveWindowSubclass
 		;
 
+#ifdef _WIN64
+	using ::GetWindowLongPtrW, ::SetWindowLongPtrW;
+#else
+	inline auto GetWindowLongPtrW(HWND hwnd, int index) noexcept -> LONG_PTR
+	{
+		return ::GetWindowLongW(hwnd, index);
+	}
+
+	inline auto SetWindowLongPtrW(HWND hwnd, int index, LONG_PTR value) noexcept -> LONG_PTR
+	{
+		return ::SetWindowLongW(hwnd, index, value);
+	}
+#endif
+
 	constexpr auto Gwlp_UserData = GWLP_USERDATA;
 	constexpr auto CwUseDefault = CW_USEDEFAULT;
 	constexpr auto SpiGetNonClientMetrics = SPI_GETNONCLIENTMETRICS;
 	constexpr auto DefaultCharset = DEFAULT_CHARSET;
+	constexpr auto OdtMenu = ODT_MENU;
 
 	namespace ErrorCodes
 	{
